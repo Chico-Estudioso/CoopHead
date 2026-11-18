@@ -1,0 +1,20 @@
+name: Validar estructura y documentación
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Comprobar archivos esenciales
+        shell: bash
+        run: |
+          test -f CLAUDE.md
+          test -f AGENTS.md
+          test -f ROADMAP.md
+          test -f README.md
+          test -f docs/REGLAS_DE_JUEGO.md

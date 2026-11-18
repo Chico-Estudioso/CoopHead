@@ -1,0 +1,36 @@
+# .NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.cache
+
+# Build / logs
+artifacts/
+logs/
+*.log
+
+# Local game files and references
+/game-local/
+/local-cuphead/
+/game-references/
+*.sav
+*.bak
+
+# Audio captures and local speech models
+recordings/
+voice-models/
+models-local/
+*.wav
+*.flac
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Temporary output
+*.tmp
+*.old
