@@ -9,7 +9,8 @@
 | BepInEx | 5.4.x | Investigando | 3-Player Co-op exige BepInEx 5.4.x x64; DebugMod usa `BepInEx.Core` 5.* | No instalado aún. |
 | Harmony | HarmonyX incluido en BepInEx 5.4 | Investigando | `0Harmony.dll` en `BepInEx/core` | No añadir una copia propia. |
 | Target .NET del plugin | `net35` | Investigando | DebugMod y 3-Player Co-op compilan para `net35` | `Coophead.Core` ya compila para `net35`. |
-| Coophead.Core | 0.1.0 | Compatible probado (solo pruebas unitarias) | 113 pruebas en CI | No probado dentro del juego. |
+| Coophead.Core | 0.1.0 | Compatible probado (solo pruebas unitarias) | Pruebas en CI | No probado dentro del juego. |
+| Coophead (plugin) | 0.1.0 | No probado | Compila contra BepInEx.Core 5.4.21 y UnityEngine.Modules 2017.4.9 | Falta comprobar la carga en la copia de pruebas. |
 | Reconocedor local | Pendiente | No probado | — | M5. |
 
 Estados permitidos: `No probado`, `Investigando`, `Compatible probado`, `Incompatible`, `Bloqueado`, `Deshabilitado por seguridad`.

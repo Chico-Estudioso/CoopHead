@@ -30,6 +30,7 @@ Desarrollar un plugin BepInEx para Cuphead que añada reglas configurables al co
 
 ## Estructura y comandos
 - `src/Coophead.Core`: lógica pura (`net35` + `netstandard2.0`). No puede referenciar Unity, BepInEx ni ensamblados de Cuphead, y debe seguir compilando para `net35` (sin `Task`, `Tuple`, `IReadOnlyList`, `string.IsNullOrWhiteSpace`, etc.).
+- `src/Coophead.Plugin`: plugin BepInEx 5 (`net35`). Compila solo contra paquetes de referencia (`BepInEx.Core`, `UnityEngine.Modules`) con `IncludeAssets=compile`; nunca contra DLL del juego copiadas al repositorio.
 - `tests/Coophead.Core.Tests`: pruebas xUnit (`net8.0`).
 - Compilar: `dotnet build Coophead.sln -c Release`.
 - Probar: `dotnet test Coophead.sln -c Release`.
