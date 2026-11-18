@@ -5,6 +5,7 @@ using BepInEx.Configuration;
 using Coophead.Core;
 using Coophead.Core.Configuration;
 using Coophead.Core.Integration;
+using Coophead.Core.Presentation;
 using Coophead.Core.Roulette;
 using Coophead.Core.Thanks;
 using Coophead.Plugin.GameIntegration;
@@ -21,12 +22,21 @@ namespace Coophead.Plugin
     public sealed class CoopheadPlugin : BaseUnityPlugin
     {
         private const string GeneralSection = "1 - General";
+        private const string HudSection = "6 - HUD";
 
         private ConfigEntry<bool> modEnabled;
         private ConfigEntry<bool> diagnostics;
         private ConfigEntry<bool> installHooks;
         private ConfigEntry<bool> applyRules;
         private Harmony harmony;
+        private ConfigEntry<bool> showHud;
+        private ConfigEntry<HudCorner> hudCorner;
+        private ConfigEntry<int> hudFontSize;
+        private ConfigEntry<float> summarySeconds;
+        private readonly HudOverlay overlay = new HudOverlay();
+        private readonly HudContext hudContext = new HudContext();
+        private IList<string> summaryLines;
+        private float summaryUntil;
         private ConfigEntry<KeyboardShortcut> thanksKeyP1;
         private ConfigEntry<KeyboardShortcut> thanksKeyP2;
         private CoopheadSettings settings;
@@ -140,6 +150,14 @@ namespace Coophead.Plugin
                 "Instala los hooks de solo lectura que registran inicio y fin de nivel, muertes y rescates (requiere reiniciar el juego). Si un hook no existe en tu versión, se desactiva solo.");
             applyRules = Config.Bind(GeneralSection, "AplicarReglas", false,
                 "Envía las muertes y rescates detectados a las reglas (contadores, agradecimiento y ruleta). Actívalo solo cuando hayas comprobado en el log que los eventos son correctos (docs/GAME_HOOKS.md).");
+            showHud = Config.Bind(HudSection, "MostrarHUD", true,
+                "Muestra contadores, créditos, ventana de agradecimiento y efectos activos durante los niveles.");
+            hudCorner = Config.Bind(HudSection, "Esquina", HudCorner.SuperiorDerecha,
+                "Esquina de la pantalla donde se dibuja el HUD. Elige una que no tape la acción ni las cartas de vida.");
+            hudFontSize = Config.Bind(HudSection, "TamanoFuente", 14,
+                new ConfigDescription("Tamaño del texto del HUD.", new AcceptableValueRange<int>(8, 32)));
+            summarySeconds = Config.Bind(HudSection, "SegundosResumen", 8f,
+                new ConfigDescription("Segundos que se muestra el resumen al terminar un nivel. 0 = no mostrarlo.", new AcceptableValueRange<float>(0f, 30f)));
             thanksKeyP1 = Config.Bind(CoopheadSettings.ThanksSection, "TeclaGraciasP1", new KeyboardShortcut(KeyCode.F7),
                 "Tecla de respaldo para que P1 dé las gracias. Comprueba que no choca con tus controles ni con otros mods.");
             thanksKeyP2 = Config.Bind(CoopheadSettings.ThanksSection, "TeclaGraciasP2", new KeyboardShortcut(KeyCode.F8),
@@ -174,6 +192,38 @@ namespace Coophead.Plugin
 
             Logger.LogInfo("Hooks instalados: " + installed + " de " + statuses.Count + ". Reglas "
                 + (applyRules.Value ? "APLICADAS" : "en modo solo registro") + ".");
+        }
+
+        private void OnGUI()
+        {
+            // Solo se dibuja en Repaint: evita construir el texto varias veces por frame.
+            if (failed || session == null || !modEnabled.Value || !showHud.Value || Event.current.type != EventType.Repaint)
+            {
+                return;
+            }
+
+            try
+            {
+                float offset = 0f;
+                if (session.Rules.Session != null && session.Rules.Session.IsActive)
+                {
+                    hudContext.RulesApplied = applyRules.Value;
+                    hudContext.VoiceAvailable = session.Thanks.VoiceAvailable;
+                    IList<string> lines = HudFormatter.BuildLines(session, coreConfig, hudContext, Time.time);
+                    overlay.Draw(lines, hudCorner.Value, hudFontSize.Value, 0f);
+                    offset = HudOverlay.Height(lines, hudFontSize.Value) + 6f;
+                }
+
+                if (summaryLines != null && Time.realtimeSinceStartup < summaryUntil)
+                {
+                    overlay.Draw(summaryLines, hudCorner.Value, hudFontSize.Value, offset);
+                }
+            }
+            catch (Exception e)
+            {
+                showHud.Value = false;
+                log.Error("Error al dibujar el HUD; se oculta: " + e.Message);
+            }
         }
 
         private void OnSettingChanged(object sender, SettingChangedEventArgs e)
@@ -235,6 +285,12 @@ namespace Coophead.Plugin
                     + ". El reinicio del nivel aún no está conectado al juego.");
             session.LevelEnded += summary =>
             {
+                if (summarySeconds.Value > 0f)
+                {
+                    summaryLines = HudFormatter.BuildSummary(summary);
+                    summaryUntil = Time.realtimeSinceStartup + summarySeconds.Value;
+                }
+
                 if (DiagnosticsEnabled)
                 {
                     log.Info("Resumen " + summary.LevelKey + ": P1 " + Describe(summary.PlayerOne) + " | P2 " + Describe(summary.PlayerTwo));
