@@ -50,7 +50,10 @@ namespace Coophead.Core.Tests
 
             session.Tick(13f);
             IList<string> after = HudFormatter.BuildLines(session, config, new HudContext { RulesApplied = true }, 14f);
-            Assert.Contains(after, line => line.StartsWith("P2: Disparo lento "));
+            Assert.Contains(after, line => line.StartsWith("P2: Disparo lento ") && !line.EndsWith("(simulado)"));
+
+            IList<string> simulated = HudFormatter.BuildLines(session, config, new HudContext { RulesApplied = true, EffectsSimulated = true }, 14f);
+            Assert.Contains(simulated, line => line.StartsWith("P2: Disparo lento ") && line.EndsWith("(simulado)"));
         }
 
         [Fact]

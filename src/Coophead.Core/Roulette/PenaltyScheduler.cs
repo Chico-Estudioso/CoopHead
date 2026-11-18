@@ -10,10 +10,11 @@ namespace Coophead.Core.Roulette
     /// <remarks>
     /// Contrato: <see cref="Apply"/> guarda el valor original que modifica y <see cref="Restore"/> devuelve
     /// exactamente ese valor (nunca uno fijo). Restore debe ser seguro aunque el jugador o el nivel ya no existan.
+    /// La duración se pasa para que el aplicador pueda poner una caducidad propia como red de seguridad.
     /// </remarks>
     public interface IPenaltyApplier
     {
-        void Apply(PlayerSlot player, PenaltyEffect effect);
+        void Apply(PlayerSlot player, PenaltyEffect effect, float durationSeconds);
 
         void Restore(PlayerSlot player, PenaltyEffect effect);
     }
@@ -96,7 +97,7 @@ namespace Coophead.Core.Roulette
 
             try
             {
-                applier.Apply(player, effect);
+                applier.Apply(player, effect, durationSeconds);
             }
             catch (Exception e)
             {

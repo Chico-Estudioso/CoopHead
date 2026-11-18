@@ -73,6 +73,13 @@ namespace Coophead.Core.Integration
                 return;
             }
 
+            LevelSessionState state = session.Rules.Session;
+            if (state != null && state.IsActive && state.RestartPending)
+            {
+                // El nivel se cierra porque el propio mod pidió reiniciarlo.
+                reason = LevelEndReason.Restarted;
+            }
+
             Trace("Nivel terminado (" + reason + ") vía " + source);
             session.EndLevel(reason);
         }

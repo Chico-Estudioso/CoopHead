@@ -66,6 +66,7 @@ Todos los resultados empiezan activados con estos pesos orientativos:
 - El mismo efecto no se apila: si ya está activo, solo se amplía su final. Un efecto incompatible con otro activo del mismo jugador no se aplica.
 - Todo efecto se restaura al expirar, al morir el jugador, al terminar o reiniciar el nivel, al desactivar el mod o si falla su aplicación.
 - Semilla de depuración opcional para reproducir incidencias.
+- En el juego: «Controles invertidos» usa el mecanismo propio de Cuphead (solo el eje horizontal), «Movimiento lento» reduce la velocidad al 60 % y «Dash limitado» acorta el dash a la mitad. «Disparo lento» aún no es compatible y se quita de la ruleta cuando los efectos se aplican de verdad. Ver `docs/GAME_HOOKS.md`.
 
 ## Foco opcional en P2
 `FocusIntensity` (0 a 1, **0 por defecto**) multiplica el peso de «Sin penalización» del jugador con foco por `1 − 0,5 · intensidad`. Con 0, P1 y P2 tienen exactamente las mismas probabilidades.
