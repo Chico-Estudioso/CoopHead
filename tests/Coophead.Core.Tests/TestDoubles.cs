@@ -13,7 +13,7 @@ namespace Coophead.Core.Tests
         public PenaltyEffect? ThrowOnApply;
         public PenaltyEffect? ThrowOnRestore;
 
-        public void Apply(PlayerSlot player, PenaltyEffect effect)
+        public void Apply(PlayerSlot player, PenaltyEffect effect, float durationSeconds)
         {
             Calls.Add("apply " + player.Label() + " " + effect);
             if (ThrowOnApply == effect)

@@ -17,6 +17,9 @@ namespace Coophead.Core.Presentation
 
         /// <summary>El reconocedor está escuchando ahora mismo (solo durante una ventana).</summary>
         public bool VoiceListening { get; set; }
+
+        /// <summary>Los efectos se cuentan y se muestran, pero no se aplican al juego.</summary>
+        public bool EffectsSimulated { get; set; }
     }
 
     /// <summary>
@@ -60,7 +63,8 @@ namespace Coophead.Core.Presentation
 
             foreach (ActivePenalty penalty in session.Penalties.Active)
             {
-                lines.Add(penalty.Player.Label() + ": " + penalty.Effect.DisplayName() + " " + Seconds(penalty.Remaining(now)));
+                lines.Add(penalty.Player.Label() + ": " + penalty.Effect.DisplayName() + " " + Seconds(penalty.Remaining(now))
+                    + (context.EffectsSimulated ? " (simulado)" : string.Empty));
             }
 
             lines.Add(DescribeThanksChannel(config, context));

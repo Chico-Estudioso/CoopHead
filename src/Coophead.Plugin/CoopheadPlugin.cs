@@ -25,6 +25,7 @@ namespace Coophead.Plugin
         private const string GeneralSection = "1 - General";
         private const string HudSection = "6 - HUD";
         private const string VoiceSection = "7 - Voz";
+        private const string EffectsSection = "8 - Efectos";
 
         private ConfigEntry<bool> modEnabled;
         private ConfigEntry<bool> diagnostics;
@@ -43,6 +44,11 @@ namespace Coophead.Plugin
         private ConfigEntry<float> voiceMinConfidence;
         private ConfigEntry<KeyboardShortcut> voiceTestKey;
         private VoiceService voice;
+        private ConfigEntry<bool> applyEffects;
+        private ConfigEntry<float> slowMovementFactor;
+        private ConfigEntry<float> dashFactor;
+        private GameEffectsApplier gameEffects;
+        private bool restartPending;
         private bool voiceTesting;
         private float summaryUntil;
         private ConfigEntry<KeyboardShortcut> thanksKeyP1;
@@ -73,12 +79,14 @@ namespace Coophead.Plugin
             try
             {
                 BindPluginSettings();
+                gameEffects = new GameEffectsApplier(log, () => slowMovementFactor.Value, () => dashFactor.Value);
                 settings = CoopheadSettings.Bind(new BepInExConfigBinder(Config));
                 coreConfig = new CoopheadConfig();
                 ApplySettings();
                 Config.SettingChanged += OnSettingChanged;
 
-                session = new CoopheadSession(coreConfig, new DisabledPenaltyApplier(log), log);
+                var applier = new RoutingPenaltyApplier(gameEffects, new DisabledPenaltyApplier(log), () => applyEffects.Value);
+                session = new CoopheadSession(coreConfig, applier, log);
                 SubscribeDiagnostics();
                 active = modEnabled.Value;
                 LogEnvironment();
@@ -127,6 +135,11 @@ namespace Coophead.Plugin
 
                 ProcessVoice(now);
                 session.Tick(now);
+                if (restartPending)
+                {
+                    restartPending = false;
+                    RestartLevel();
+                }
             }
             catch (Exception e)
             {
@@ -173,6 +186,12 @@ namespace Coophead.Plugin
                 new ConfigDescription("Tamaño del texto del HUD.", new AcceptableValueRange<int>(8, 32)));
             summarySeconds = Config.Bind(HudSection, "SegundosResumen", 8f,
                 new ConfigDescription("Segundos que se muestra el resumen al terminar un nivel. 0 = no mostrarlo.", new AcceptableValueRange<float>(0f, 30f)));
+            applyEffects = Config.Bind(EffectsSection, "AplicarEfectos", false,
+                "Experimental. Aplica de verdad los efectos de la ruleta al juego. Si está desactivado, se simulan: se cuentan y se ven en el HUD, pero no cambian nada. Los efectos no compatibles con tu versión se quitan de la ruleta al activarlo.");
+            slowMovementFactor = Config.Bind(EffectsSection, "FactorMovimientoLento", 0.6f,
+                new ConfigDescription("Velocidad de movimiento durante «Movimiento lento» (0,6 = 60 %).", new AcceptableValueRange<float>(0.2f, 1f)));
+            dashFactor = Config.Bind(EffectsSection, "FactorDash", 0.5f,
+                new ConfigDescription("Duración del dash durante «Dash limitado» (0,5 = la mitad de distancia).", new AcceptableValueRange<float>(0.2f, 1f)));
             voiceEnabled = Config.Bind(VoiceSection, "VozActivada", false,
                 "Experimental. Reconoce «gracias» con el reconocedor de voz de Windows, en local y sin Internet. Solo escucha durante la ventana de agradecimiento o la prueba. No guarda ni envía audio. Requiere reiniciar el juego.");
             voiceCulture = Config.Bind(VoiceSection, "Idioma", "es-ES",
@@ -266,6 +285,19 @@ namespace Coophead.Plugin
             }
         }
 
+        private void RestartLevel()
+        {
+            Type sceneLoader = AccessTools.TypeByName("SceneLoader");
+            System.Reflection.MethodInfo reload = sceneLoader == null ? null : AccessTools.Method(sceneLoader, "ReloadLevel", Type.EmptyTypes);
+            if (reload == null || !reload.IsStatic)
+            {
+                log.Warning("No se encuentra SceneLoader.ReloadLevel en esta versión: no se reinicia el nivel.");
+                return;
+            }
+
+            reload.Invoke(null, null);
+        }
+
         private void InstallGameHooks()
         {
             if (!installHooks.Value)
@@ -312,6 +344,7 @@ namespace Coophead.Plugin
                     hudContext.RulesApplied = applyRules.Value;
                     hudContext.VoiceAvailable = session.Thanks.VoiceAvailable;
                     hudContext.VoiceListening = voice != null && voice.Listening;
+                    hudContext.EffectsSimulated = !applyEffects.Value;
                     IList<string> lines = HudFormatter.BuildLines(session, coreConfig, hudContext, Time.time);
                     overlay.Draw(lines, hudCorner.Value, hudFontSize.Value, 0f);
                     offset = HudOverlay.Height(lines, hudFontSize.Value) + 6f;
@@ -353,6 +386,19 @@ namespace Coophead.Plugin
                 warnings.Add("Respaldo manual activado sin teclas asignadas: se trata como desactivado.");
             }
 
+            if (applyEffects.Value)
+            {
+                foreach (PenaltyEffect effect in RouletteOutcomes.AllEffects())
+                {
+                    OutcomeSettings outcome = coreConfig.Roulette.Get(effect.ToOutcome());
+                    if (outcome.Enabled && !gameEffects.IsSupported(effect))
+                    {
+                        outcome.Enabled = false;
+                        warnings.Add("«" + effect.DisplayName() + "» no es compatible con esta versión: se quita de la ruleta.");
+                    }
+                }
+            }
+
             foreach (string warning in warnings)
             {
                 log.Warning("Configuración: " + warning);
@@ -384,8 +430,11 @@ namespace Coophead.Plugin
                 }
             };
             session.RestartRequested += request =>
-                log.Warning("Límite alcanzado (" + request.Reason + ") por " + request.TriggeredBy.Label()
-                    + ". El reinicio del nivel aún no está conectado al juego.");
+            {
+                log.Warning("Límite alcanzado (" + request.Reason + ") por " + request.TriggeredBy.Label() + ": se reinicia el nivel.");
+                // Se difiere al siguiente Update: nunca se recarga la escena dentro de un hook del juego.
+                restartPending = true;
+            };
             session.LevelEnded += summary =>
             {
                 if (summarySeconds.Value > 0f)
@@ -416,7 +465,7 @@ namespace Coophead.Plugin
             Logger.LogInfo(PluginInfo.Name + " " + PluginInfo.Version + " cargado.");
             Logger.LogInfo("Juego: versión " + Application.version + ", Unity " + Application.unityVersion
                 + ", plataforma " + Application.platform + ", proceso de " + (IntPtr.Size * 8) + " bits, runtime " + Environment.Version + ".");
-            Logger.LogInfo("Efectos de la ruleta: deshabilitados por seguridad hasta M4. Reinicio de nivel: no conectado.");
+            Logger.LogInfo("Efectos de la ruleta: " + (applyEffects.Value ? "se aplican" : "simulados") + " (" + gameEffects.Describe() + ").");
             Logger.LogInfo("Reglas: límite P1 " + coreConfig.Rules.PlayerOneReviveLimit
                 + ", P2 " + coreConfig.Rules.PlayerTwoReviveLimit
                 + ", equipo " + coreConfig.Rules.TeamReviveLimit

@@ -21,7 +21,7 @@ Reglas completas en [`docs/REGLAS_DE_JUEGO.md`](docs/REGLAS_DE_JUEGO.md).
 | M2 Hooks del juego | Instrumentación de solo lectura lista; **falta verificarla en el juego** |
 | HUD y resumen de nivel | Listo; **no probado en el juego** |
 | Voz local | Experimental, desactivada por defecto; **no probada en un equipo real** |
-| Efectos de la ruleta | Pendiente de verificar los hooks |
+| Efectos de la ruleta y reinicio | Experimentales y desactivados por defecto; **no probados en el juego** |
 
 Nada se ha probado todavía dentro de Cuphead. No se debe asumir compatibilidad hasta verificar los hooks en la copia local (ver [`docs/GAME_HOOKS.md`](docs/GAME_HOOKS.md)).
 

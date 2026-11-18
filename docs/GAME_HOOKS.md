@@ -48,8 +48,22 @@ Mapeo previsto: `PlayerId.PlayerOne` → `PlayerSlot.PlayerOne`, `PlayerId.Playe
 - Si ambos están muertos, el nivel se pierde.
 - Por tanto, «fantasma no rescatado» no es un evento del juego: como mucho, «fantasma fuera de cámara». Queda fuera de alcance por ahora.
 
-## Efectos de la ruleta
-Pendiente de auditoría en M4: velocidad de movimiento, inversión del eje horizontal sin afectar a menús ni pausa, cadencia de disparo y dash. Ningún efecto se activará sin hook verificado que permita restaurar el valor original.
+## Efectos de la ruleta (experimental, `AplicarEfectos = false` por defecto)
+Implementados en `src/Coophead.Plugin/GameIntegration/GameEffectsApplier.cs`, resueltos por nombre:
+
+| Efecto | Miembros usados | Restauración | Estado |
+|---|---|---|---|
+| Controles invertidos | `PlayerManager.GetPlayer(PlayerId)` → `stats` → `PlayerStatsManager.ReverseTime` | Se pone a 0. Además el propio juego lo descuenta, así que caduca solo aunque fallara la restauración | Candidato |
+| Movimiento lento | `LevelPlayerController.motor` → `LevelPlayerMotor.properties.moveSpeed` (490 en la referencia) | Valor original exacto, guardado por objeto y con contador | Candidato |
+| Dash limitado | `LevelPlayerMotor.properties.dashTime` (0,3 s en la referencia) | Valor original exacto | Candidato |
+| Disparo lento | Sin vía segura identificada (la cadencia depende de cada arma) | — | No compatible: se quita de la ruleta al activar `AplicarEfectos` |
+
+- `ReverseTime` es el mecanismo de inversión que ya usa el juego: en la referencia solo invierte el eje horizontal al caminar dentro del nivel, no menús ni pausa.
+- En niveles de avión los efectos no se aplican (no hay `LevelPlayerMotor`) y se registra un aviso.
+- Si `AplicarEfectos` está desactivado, la ruleta funciona igual pero los efectos se **simulan**: el HUD los muestra con «(simulado)».
+
+## Reinicio de nivel
+Con `ReinicioAutomatico = true`, al alcanzar un límite se llama a `SceneLoader.ReloadLevel()` en el siguiente `Update` (nunca dentro de un hook). Si el método no existe, solo se avisa. Estado: Candidato.
 
 ## Instrumentación implementada
 `src/Coophead.Plugin/GameIntegration/GameHooks.cs` instala estos hooks al arrancar, **resolviéndolos por nombre** (Coophead no compila contra `Assembly-CSharp`):
@@ -87,6 +101,8 @@ Pendiente de auditoría en M4: velocidad de movimiento, inversión del eje horiz
 | Repetirlo en un nivel de avión y en uno de plataformas | Mismos eventos, o anotar las diferencias |
 
 4. Si todo coincide, cambia el estado de cada hook a `Verificado` en este documento, indicando la versión del juego, y activa `AplicarReglas`.
+5. Con `AplicarReglas` activo, prueba los efectos uno a uno: deja solo uno activado en la ruleta, activa `AplicarEfectos`, deja pasar una ventana sin dar las gracias y comprueba que el efecto se nota, que dura lo indicado y que al terminar todo vuelve a la normalidad. Repite muriendo durante el efecto y saliendo al mapa con el efecto activo.
+6. Prueba el reinicio con `LimiteReanimacionesEquipo = 1` y `ReinicioAutomatico = true` en un jefe y en un nivel de plataformas.
 
 ## Plan de verificación (M2)
 1. Parches de solo registro (postfix sin modificar valores ni retornos), con número de sesión y clave por evento. **Hecho.**

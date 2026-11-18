@@ -20,7 +20,7 @@ Los valores fuera de rango se corrigen y se avisa en `BepInEx/LogOutput.log`.
 | `LimiteReanimacionesEquipo` | `6` | 0–50 (0 = sin límite) |
 | `CreditosDeAyuda` | `true` | |
 | `CreditosMaximos` | `1` | 0–5 |
-| `ReinicioAutomatico` | `false` | Solo debe activarse cuando el hook de reinicio esté verificado. Desactivado = solo aviso. |
+| `ReinicioAutomatico` | `false` | Reinicia el nivel con `SceneLoader.ReloadLevel()` al alcanzar un límite. Actívalo solo tras probarlo (`docs/GAME_HOOKS.md`). Desactivado = solo aviso. |
 
 ## 3 - Ruleta
 | Clave | Por defecto | Rango |
@@ -74,6 +74,15 @@ Equipo: 1/6 reanimaciones
 P2: ¡da las gracias! 2.0 s
 Agradecimiento: voz no disponible · tecla activa
 ```
+
+## 8 - Efectos (experimental)
+| Clave | Por defecto | Descripción |
+|---|---|---|
+| `AplicarEfectos` | `false` | Aplica de verdad los efectos. Desactivado = simulados (se ven en el HUD con «(simulado)»). Al activarlo, los efectos no compatibles con tu versión se quitan de la ruleta. |
+| `FactorMovimientoLento` | `0.6` | 0,2–1. Velocidad durante «Movimiento lento». |
+| `FactorDash` | `0.5` | 0,2–1. Duración del dash durante «Dash limitado». |
+
+«Disparo lento» todavía no tiene una vía segura en el juego.
 
 ## 7 - Voz (experimental, solo Windows)
 | Clave | Por defecto | Descripción |

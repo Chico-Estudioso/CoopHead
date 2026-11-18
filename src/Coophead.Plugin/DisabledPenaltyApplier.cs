@@ -19,11 +19,11 @@ namespace Coophead.Plugin
             this.log = log;
         }
 
-        public void Apply(PlayerSlot player, PenaltyEffect effect)
+        public void Apply(PlayerSlot player, PenaltyEffect effect, float durationSeconds)
         {
             if (warned.Add(effect))
             {
-                log.Warning("«" + effect.DisplayName() + "» aún no está implementado en el juego (deshabilitado por seguridad): no se modifica nada.");
+                log.Warning("«" + effect.DisplayName() + "» se simula: AplicarEfectos está desactivado o el efecto no es compatible con esta versión. No se modifica el juego.");
             }
         }
 

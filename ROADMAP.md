@@ -32,7 +32,7 @@ Instrumentación hecha: 9 hooks candidatos resueltos por nombre, postfix de solo
 - Resultado: eventos comprobados en partidas locales.
 
 ## M3 — Motor de reglas bilateral 🟡
-Lógica implementada y probada en `Coophead.Core` (incluye el límite de equipo de ADR-004). Falta conectarla a hooks verificados.
+Lógica implementada y probada en `Coophead.Core` (incluye el límite de equipo de ADR-004), conectada a los hooks candidatos y con reinicio por `SceneLoader.ReloadLevel()` detrás de `ReinicioAutomatico`. Falta verificarlo en el juego.
 
 - Contadores por jugador y nivel.
 - Límite configurable de reanimaciones recibidas.
@@ -43,7 +43,7 @@ Lógica implementada y probada en `Coophead.Core` (incluye el límite de equipo 
 - Resultado: reglas verificadas con ambos jugadores.
 
 ## M4 — Ruleta y equilibrio adaptativo 🟡
-Ruleta, director de equilibrio y programador de efectos implementados y probados. Faltan los efectos reales en el juego.
+Ruleta, director de equilibrio y programador de efectos implementados y probados. Efectos en el juego experimentales (controles invertidos, movimiento lento y dash limitado) detrás de `AplicarEfectos`; «Disparo lento» sin vía segura todavía. Falta probarlos en la copia local.
 
 - Movimiento lento, controles invertidos, disparo lento, sin penalización, dash limitado y castigo doble.
 - Duración inicial de cuatro segundos.

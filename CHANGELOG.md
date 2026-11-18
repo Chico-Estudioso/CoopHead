@@ -4,6 +4,8 @@ Los cambios se documentan en español y se agrupan por versión.
 
 ## Sin publicar
 ### Añadido
+- Efectos en el juego experimentales (desactivados por defecto): controles invertidos con el mecanismo propio del juego, movimiento lento y dash limitado con restauración exacta del valor original. Los efectos no compatibles se quitan de la ruleta; si los efectos están desactivados, se simulan y el HUD lo indica.
+- Reinicio de nivel con `SceneLoader.ReloadLevel()`, diferido al siguiente frame y detrás de `ReinicioAutomatico`.
 - Voz experimental (desactivada por defecto): ayudante local `Coophead.Voice.exe` con el reconocedor de Windows y gramática cerrada, protocolo de órdenes fijas probado en el Core, escucha solo durante las ventanas, prueba de micrófono con F9 y sin castigo por fallos técnicos.
 - HUD discreto (IMGUI) en una esquina configurable con contadores, créditos, límite de equipo, ventana de agradecimiento, efectos activos y estado de la voz; resumen al terminar el nivel. Texto generado en el Core (`HudFormatter`) y probado.
 - Instrumentación de M2: 9 hooks Harmony de solo lectura resueltos por nombre en tiempo de ejecución, con informe `OK`/`FALTA` al arrancar.
