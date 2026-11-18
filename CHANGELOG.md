@@ -4,6 +4,9 @@ Los cambios se documentan en español y se agrupan por versión.
 
 ## Sin publicar
 ### Añadido
+- Instrumentación de M2: 9 hooks Harmony de solo lectura resueltos por nombre en tiempo de ejecución, con informe `OK`/`FALTA` al arrancar.
+- `GameEventTranslator`: traduce los eventos del juego al Core con la misma clave para muerte y rescate, ignora el fin de instancias de nivel anteriores y trata el robo de corazón como vuelta a la partida sin contar.
+- Ajustes `Hooks` y `AplicarReglas` (este último desactivado por defecto).
 - Plugin BepInEx 5 mínimo (`Coophead.dll`, `net35`): carga la configuración, crea la sesión del Core, registra el entorno del juego y no modifica nada todavía.
 - Esquema de configuración `CoopheadSettings` con 50 ajustes en español, rangos y validación (`docs/CONFIGURACION.md`).
 - Teclas de respaldo para dar las gracias (F7/F8 por defecto, configurables).
@@ -13,7 +16,7 @@ Los cambios se documentan en español y se agrupan por versión.
 - Director de equilibrio con fórmula de presión documentada.
 - Programador de efectos que garantiza la restauración.
 - Ventanas de agradecimiento y reconocimiento de la frase «gracias» para ambos jugadores, con respaldo manual.
-- Pruebas unitarias (118) y CI que compila para `net35` y `netstandard2.0`.
+- Pruebas unitarias (130) y CI que compila para `net35` y `netstandard2.0`.
 - Informe M0 de escritorio, hooks candidatos (`docs/GAME_HOOKS.md`) y ADR-004 con la revisión del kit.
 
 ### Cambiado

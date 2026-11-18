@@ -9,6 +9,8 @@ Los valores fuera de rango se corrigen y se avisa en `BepInEx/LogOutput.log`.
 |---|---|---|
 | `Activado` | `true` | Interruptor general. Al desactivarlo se restauran todos los efectos. |
 | `Diagnostico` | `true` | Registra en el log cada evento y decisión. Sin audio ni datos personales. |
+| `Hooks` | `true` | Instala los hooks de solo lectura. Requiere reiniciar el juego. |
+| `AplicarReglas` | `false` | Envía muertes y rescates a las reglas. Actívalo solo tras verificar los hooks (`docs/GAME_HOOKS.md`). |
 
 ## 2 - Reglas
 | Clave | Por defecto | Rango |
