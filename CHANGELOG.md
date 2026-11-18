@@ -4,6 +4,7 @@ Los cambios se documentan en español y se agrupan por versión.
 
 ## Sin publicar
 ### Añadido
+- HUD discreto (IMGUI) en una esquina configurable con contadores, créditos, límite de equipo, ventana de agradecimiento, efectos activos y estado de la voz; resumen al terminar el nivel. Texto generado en el Core (`HudFormatter`) y probado.
 - Instrumentación de M2: 9 hooks Harmony de solo lectura resueltos por nombre en tiempo de ejecución, con informe `OK`/`FALTA` al arrancar.
 - `GameEventTranslator`: traduce los eventos del juego al Core con la misma clave para muerte y rescate, ignora el fin de instancias de nivel anteriores y trata el robo de corazón como vuelta a la partida sin contar.
 - Ajustes `Hooks` y `AplicarReglas` (este último desactivado por defecto).
@@ -16,7 +17,7 @@ Los cambios se documentan en español y se agrupan por versión.
 - Director de equilibrio con fórmula de presión documentada.
 - Programador de efectos que garantiza la restauración.
 - Ventanas de agradecimiento y reconocimiento de la frase «gracias» para ambos jugadores, con respaldo manual.
-- Pruebas unitarias (130) y CI que compila para `net35` y `netstandard2.0`.
+- Pruebas unitarias (135) y CI que compila para `net35` y `netstandard2.0`.
 - Informe M0 de escritorio, hooks candidatos (`docs/GAME_HOOKS.md`) y ADR-004 con la revisión del kit.
 
 ### Cambiado

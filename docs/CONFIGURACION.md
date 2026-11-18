@@ -56,6 +56,25 @@ Los valores fuera de rango se corrigen y se avisa en `BepInEx/LogOutput.log`.
 
 La fórmula está en `docs/REGLAS_DE_JUEGO.md`.
 
+## 6 - HUD
+| Clave | Por defecto | Descripción |
+|---|---|---|
+| `MostrarHUD` | `true` | Contadores, créditos, límite de equipo, ventana de agradecimiento, efectos activos y estado de la voz. Solo durante los niveles. |
+| `Esquina` | `SuperiorDerecha` | `SuperiorIzquierda`, `SuperiorDerecha`, `InferiorIzquierda` o `InferiorDerecha`. |
+| `TamanoFuente` | `14` | 8–32 |
+| `SegundosResumen` | `8` | 0–30. Resumen del nivel al terminar (0 = no mostrarlo). |
+
+El HUD no captura entrada ni bloquea controles. Ejemplo:
+
+```
+Coophead · reglas activas
+P1: recibidas 0/3 · dadas 1 · muertes 0 · crédito 1
+P2 (fantasma): recibidas 1/3 · dadas 0 · muertes 2
+Equipo: 1/6 reanimaciones
+P2: ¡da las gracias! 2.0 s
+Agradecimiento: voz no disponible · tecla activa
+```
+
 ## 5 - Agradecimiento
 | Clave | Por defecto | Descripción |
 |---|---|---|

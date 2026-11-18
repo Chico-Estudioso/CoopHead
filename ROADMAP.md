@@ -63,7 +63,7 @@ Ventanas de agradecimiento, coincidencia de frase y respaldo manual implementado
 - Resultado: reconocimiento probado en el equipo real, falsos positivos/negativos documentados.
 
 ## M6 — Configuración y HUD 🟡
-Esquema completo de ajustes en BepInEx (`docs/CONFIGURACION.md`), validado y probado. Falta el HUD y el resumen visual.
+Esquema completo de ajustes en BepInEx (`docs/CONFIGURACION.md`), validado y probado. HUD IMGUI con contadores, créditos, ventana, efectos y estado de la voz, más resumen al terminar el nivel. Falta comprobar en el juego que no tapa nada importante.
 
 - Configuración BepInEx y/o interfaz propia, según viabilidad.
 - HUD de contadores, créditos, temporizador y estado de voz.
