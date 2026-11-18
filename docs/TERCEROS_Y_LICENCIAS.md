@@ -22,7 +22,10 @@ No incluir en la release ensamblados propietarios de Cuphead ni archivos del jue
 | Microsoft.NET.Test.Sdk | 17.11.1 | MIT | No (solo pruebas) | Infraestructura de pruebas. |
 | Microsoft.NETFramework.ReferenceAssemblies (implícito) | 1.0.x | MIT | No (solo compilación) | Compilar el target `net35` fuera de Windows. |
 
-`Coophead.Core` no tiene dependencias en tiempo de ejecución.
+| BepInEx.Core | 5.4.21 | LGPL-2.1 | No (solo compilación; lo aporta la instalación) | API de plugins y configuración. |
+| UnityEngine.Modules | 2017.4.9 | Ensamblados de referencia de Unity | No (solo compilación) | Compilar contra la API de Unity sin copiar DLL del juego. |
+
+`Coophead.Core` no tiene dependencias en tiempo de ejecución. El plugin solo depende de lo que ya trae la instalación de BepInEx y del juego.
 
 ## Referencias leídas sin reutilizar código
 - Cuphead.DebugMod y CupHeads no publican licencia: se consultan solo para documentar nombres de API del juego. No se copia su código.

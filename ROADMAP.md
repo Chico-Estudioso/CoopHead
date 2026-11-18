@@ -13,7 +13,9 @@ Hecha la investigación de escritorio (`docs/INFORME_M0.md`): BepInEx 5.4.x, `ne
 - Validar opciones de reconocimiento de voz local y requisitos/licencias.
 - Resultado: informe técnico y decisión GO/NO-GO.
 
-## M1 — Plugin mínimo ⬜
+## M1 — Plugin mínimo 🟡
+Plugin `net35` que compila contra BepInEx 5.4.21 y Unity 2017.4.9 (solo compilación), enlaza la configuración y registra versión de juego, Unity y arquitectura. Falta comprobar que BepInEx lo carga en la copia de pruebas.
+
 - Crear solución C# con target framework verificado.
 - Referenciar BepInEx/Harmony y ensamblados de juego de forma local.
 - Crear plugin que cargue y escriba logs.
@@ -58,7 +60,9 @@ Ventanas de agradecimiento, coincidencia de frase y respaldo manual implementado
 - Fallback manual configurable si la voz no está disponible.
 - Resultado: reconocimiento probado en el equipo real, falsos positivos/negativos documentados.
 
-## M6 — Configuración y HUD ⬜
+## M6 — Configuración y HUD 🟡
+Esquema completo de ajustes en BepInEx (`docs/CONFIGURACION.md`), validado y probado. Falta el HUD y el resumen visual.
+
 - Configuración BepInEx y/o interfaz propia, según viabilidad.
 - HUD de contadores, créditos, temporizador y estado de voz.
 - Resumen al terminar nivel.

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Plugin BepInEx 5 de Coophead. No referencia ensamblados de Cuphead: compila solo contra
+    BepInEx y UnityEngine (paquetes de compilación) y resolverá los tipos del juego en tiempo de
+    ejecución cuando existan hooks verificados.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net35</TargetFramework>
+    <AssemblyName>Coophead</AssemblyName>
+    <RootNamespace>Coophead.Plugin</RootNamespace>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Solo para compilar: BepInEx, Harmony y UnityEngine los aporta la instalación del juego. -->
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" IncludeAssets="compile" PrivateAssets="all" />
+    <PackageReference Include="UnityEngine.Modules" Version="2017.4.9" IncludeAssets="compile" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Coophead.Core\Coophead.Core.csproj" />
+  </ItemGroup>
+
+</Project>
