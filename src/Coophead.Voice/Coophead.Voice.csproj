@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Ayudante de voz local, solo Windows. Proceso aparte porque el plugin (net35, Mono de Unity) no puede usar
+    System.Speech de forma fiable. Usa el reconocedor de voz instalado en Windows con una gramática cerrada.
+    Se comunica con el plugin por entrada/salida estándar (VoiceProtocol). No guarda ni envía audio.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Coophead.Voice</AssemblyName>
+    <RootNamespace>Coophead.Voice</RootNamespace>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Speech" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Coophead.Core\Coophead.Core.csproj" />
+  </ItemGroup>
+
+</Project>

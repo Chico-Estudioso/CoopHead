@@ -75,6 +75,16 @@ P2: ¡da las gracias! 2.0 s
 Agradecimiento: voz no disponible · tecla activa
 ```
 
+## 7 - Voz (experimental, solo Windows)
+| Clave | Por defecto | Descripción |
+|---|---|---|
+| `VozActivada` | `false` | Reconocimiento local con el reconocedor de Windows. Requiere reiniciar el juego. |
+| `Idioma` | `es-ES` | Debe estar instalado con «Reconocimiento de voz» en Windows. |
+| `ConfianzaMinima` | `0.6` | 0,1–1. Súbela si hay falsos positivos; bájala si no te reconoce. |
+| `TeclaPruebaVoz` | `F9` | Escucha 5 s y escribe en el log lo reconocido. |
+
+Privacidad y limitaciones en `docs/VOZ_Y_PRIVACIDAD.md`.
+
 ## 5 - Agradecimiento
 | Clave | Por defecto | Descripción |
 |---|---|---|

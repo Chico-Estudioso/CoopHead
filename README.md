@@ -20,14 +20,16 @@ Reglas completas en [`docs/REGLAS_DE_JUEGO.md`](docs/REGLAS_DE_JUEGO.md).
 | M1 Plugin BepInEx mínimo | Compila y carga la configuración; **no probado en el juego** |
 | M2 Hooks del juego | Instrumentación de solo lectura lista; **falta verificarla en el juego** |
 | HUD y resumen de nivel | Listo; **no probado en el juego** |
-| Efectos de la ruleta y voz | Pendiente |
+| Voz local | Experimental, desactivada por defecto; **no probada en un equipo real** |
+| Efectos de la ruleta | Pendiente de verificar los hooks |
 
 Nada se ha probado todavía dentro de Cuphead. No se debe asumir compatibilidad hasta verificar los hooks en la copia local (ver [`docs/GAME_HOOKS.md`](docs/GAME_HOOKS.md)).
 
 ## Estructura
 ```
 src/Coophead.Core/         Lógica pura (net35 + netstandard2.0), sin Unity ni Cuphead
-src/Coophead.Plugin/       Plugin BepInEx 5 (net35): configuración, logs y sesión
+src/Coophead.Plugin/       Plugin BepInEx 5 (net35): configuración, hooks, HUD y voz
+src/Coophead.Voice/        Ayudante de voz local para Windows (net48)
 tests/Coophead.Core.Tests/ Pruebas unitarias (xUnit, net8.0)
 docs/                      Reglas, arquitectura, compatibilidad, hooks y decisiones (ADR)
 prompts/                   Guías de trabajo por fase

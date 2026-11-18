@@ -11,7 +11,7 @@
 | Target .NET del plugin | `net35` | Investigando | DebugMod y 3-Player Co-op compilan para `net35` | `Coophead.Core` ya compila para `net35`. |
 | Coophead.Core | 0.1.0 | Compatible probado (solo pruebas unitarias) | Pruebas en CI | No probado dentro del juego. |
 | Coophead (plugin) | 0.1.0 | No probado | Compila contra BepInEx.Core 5.4.21 y UnityEngine.Modules 2017.4.9 | Falta comprobar la carga en la copia de pruebas. |
-| Reconocedor local | Pendiente | No probado | — | M5. |
+| Reconocedor local | Reconocedor de escritorio de Windows (`System.Speech`) | No probado | El ayudante compila para .NET Framework 4.8 | Experimental y desactivado por defecto. Requiere el paquete de reconocimiento de voz en español de Windows. |
 
 Estados permitidos: `No probado`, `Investigando`, `Compatible probado`, `Incompatible`, `Bloqueado`, `Deshabilitado por seguridad`.
 

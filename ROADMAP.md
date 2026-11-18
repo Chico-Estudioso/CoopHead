@@ -52,7 +52,7 @@ Ruleta, director de equilibrio y programador de efectos implementados y probados
 - Resultado: ninguna combinación deja al jugador bloqueado; todos los efectos se restauran.
 
 ## M5 — Reconocimiento de voz local 🟡
-Ventanas de agradecimiento, coincidencia de frase y respaldo manual implementados. Falta elegir motor y capturar audio.
+Ventanas, coincidencia de frase y respaldo manual implementados. Motor elegido: reconocedor de Windows en un proceso auxiliar con gramática cerrada (experimental, desactivado por defecto), con prueba de micrófono. Falta probarlo en un equipo real y medir falsos positivos y negativos.
 
 - Confirmar requisitos de privacidad y tolerancia a modelos locales.
 - Selección de micrófono y prueba de entrada.

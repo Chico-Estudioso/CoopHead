@@ -8,6 +8,7 @@ using Coophead.Core.Integration;
 using Coophead.Core.Presentation;
 using Coophead.Core.Roulette;
 using Coophead.Core.Thanks;
+using Coophead.Core.Voice;
 using Coophead.Plugin.GameIntegration;
 using HarmonyLib;
 using UnityEngine;
@@ -23,6 +24,7 @@ namespace Coophead.Plugin
     {
         private const string GeneralSection = "1 - General";
         private const string HudSection = "6 - HUD";
+        private const string VoiceSection = "7 - Voz";
 
         private ConfigEntry<bool> modEnabled;
         private ConfigEntry<bool> diagnostics;
@@ -36,6 +38,12 @@ namespace Coophead.Plugin
         private readonly HudOverlay overlay = new HudOverlay();
         private readonly HudContext hudContext = new HudContext();
         private IList<string> summaryLines;
+        private ConfigEntry<bool> voiceEnabled;
+        private ConfigEntry<string> voiceCulture;
+        private ConfigEntry<float> voiceMinConfidence;
+        private ConfigEntry<KeyboardShortcut> voiceTestKey;
+        private VoiceService voice;
+        private bool voiceTesting;
         private float summaryUntil;
         private ConfigEntry<KeyboardShortcut> thanksKeyP1;
         private ConfigEntry<KeyboardShortcut> thanksKeyP2;
@@ -75,6 +83,7 @@ namespace Coophead.Plugin
                 active = modEnabled.Value;
                 LogEnvironment();
                 InstallGameHooks();
+                StartVoice();
             }
             catch (Exception e)
             {
@@ -116,6 +125,7 @@ namespace Coophead.Plugin
                     session.OnManualThanks(PlayerSlot.PlayerTwo, now);
                 }
 
+                ProcessVoice(now);
                 session.Tick(now);
             }
             catch (Exception e)
@@ -129,6 +139,11 @@ namespace Coophead.Plugin
             if (Config != null)
             {
                 Config.SettingChanged -= OnSettingChanged;
+            }
+
+            if (voice != null)
+            {
+                voice.Dispose();
             }
 
             GameHooks.Uninstall();
@@ -158,10 +173,97 @@ namespace Coophead.Plugin
                 new ConfigDescription("Tamaño del texto del HUD.", new AcceptableValueRange<int>(8, 32)));
             summarySeconds = Config.Bind(HudSection, "SegundosResumen", 8f,
                 new ConfigDescription("Segundos que se muestra el resumen al terminar un nivel. 0 = no mostrarlo.", new AcceptableValueRange<float>(0f, 30f)));
+            voiceEnabled = Config.Bind(VoiceSection, "VozActivada", false,
+                "Experimental. Reconoce «gracias» con el reconocedor de voz de Windows, en local y sin Internet. Solo escucha durante la ventana de agradecimiento o la prueba. No guarda ni envía audio. Requiere reiniciar el juego.");
+            voiceCulture = Config.Bind(VoiceSection, "Idioma", "es-ES",
+                "Idioma del reconocedor de Windows. Debe estar instalado con «Reconocimiento de voz».");
+            voiceMinConfidence = Config.Bind(VoiceSection, "ConfianzaMinima", 0.6f,
+                new ConfigDescription("Confianza mínima del reconocedor para aceptar la frase. Súbela si hay falsos positivos.", new AcceptableValueRange<float>(0.1f, 1f)));
+            voiceTestKey = Config.Bind(VoiceSection, "TeclaPruebaVoz", new KeyboardShortcut(KeyCode.F9),
+                "Escucha 5 s y escribe en el log lo que se ha reconocido, para probar el micrófono.");
             thanksKeyP1 = Config.Bind(CoopheadSettings.ThanksSection, "TeclaGraciasP1", new KeyboardShortcut(KeyCode.F7),
                 "Tecla de respaldo para que P1 dé las gracias. Comprueba que no choca con tus controles ni con otros mods.");
             thanksKeyP2 = Config.Bind(CoopheadSettings.ThanksSection, "TeclaGraciasP2", new KeyboardShortcut(KeyCode.F8),
                 "Tecla de respaldo para que P2 dé las gracias. Comprueba que no choca con tus controles ni con otros mods.");
+        }
+
+        private void StartVoice()
+        {
+            if (!voiceEnabled.Value)
+            {
+                Logger.LogInfo("Voz desactivada (experimental). El agradecimiento se confirma con la tecla de respaldo.");
+                return;
+            }
+
+            if (Application.platform != RuntimePlatform.WindowsPlayer && Application.platform != RuntimePlatform.WindowsEditor)
+            {
+                Logger.LogWarning("La voz solo está disponible en Windows; queda desactivada.");
+                return;
+            }
+
+            voice = new VoiceService(log);
+            string helper = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Info.Location), "Coophead.Voice.exe");
+            IList<string> phrases = new ThanksPhraseMatcher(coreConfig.Thanks).BuildSpokenGrammar();
+            if (!voice.Start(helper, voiceCulture.Value, phrases, voiceMinConfidence.Value))
+            {
+                voice = null;
+                return;
+            }
+
+            session.ThanksWindowOpened += window => voice.Send(VoiceProtocol.Listen);
+            session.ThanksWindowClosed += window =>
+            {
+                if (session.Thanks.Pending.Count == 0 && !voiceTesting)
+                {
+                    voice.Send(VoiceProtocol.Stop);
+                }
+            };
+        }
+
+        private void ProcessVoice(float now)
+        {
+            if (voice == null)
+            {
+                return;
+            }
+
+            if (voiceTestKey.Value.IsDown() && voice.Available)
+            {
+                voiceTesting = true;
+                log.Info("Prueba de voz: escuchando 5 s. Di «" + coreConfig.Thanks.RequiredWord + "».");
+                voice.Send(VoiceProtocol.Test(5f));
+            }
+
+            foreach (VoiceMessage message in voice.Drain())
+            {
+                switch (message.Kind)
+                {
+                    case VoiceMessageKind.Ready:
+                        session.SetVoiceAvailable(true);
+                        log.Info("Voz lista (" + message.Text + "). Reconocimiento local de Windows con modelos estadísticos; sin Internet, sin guardar audio.");
+                        break;
+                    case VoiceMessageKind.Unavailable:
+                        session.SetVoiceAvailable(false);
+                        session.ReportVoiceFailure();
+                        log.Warning("Voz no disponible: " + message.Text + " Nadie será castigado por ello.");
+                        break;
+                    case VoiceMessageKind.Heard:
+                        if (voiceTesting || DiagnosticsEnabled)
+                        {
+                            log.Info("Voz: reconocido «" + message.Text + "» (confianza " + message.Confidence.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + ").");
+                        }
+
+                        session.OnTranscript(message.Text, now);
+                        break;
+                    case VoiceMessageKind.TestEnd:
+                        voiceTesting = false;
+                        log.Info("Prueba de voz terminada.");
+                        break;
+                    case VoiceMessageKind.Error:
+                        log.Warning("Voz: " + message.Text);
+                        break;
+                }
+            }
         }
 
         private void InstallGameHooks()
@@ -209,6 +311,7 @@ namespace Coophead.Plugin
                 {
                     hudContext.RulesApplied = applyRules.Value;
                     hudContext.VoiceAvailable = session.Thanks.VoiceAvailable;
+                    hudContext.VoiceListening = voice != null && voice.Listening;
                     IList<string> lines = HudFormatter.BuildLines(session, coreConfig, hudContext, Time.time);
                     overlay.Draw(lines, hudCorner.Value, hudFontSize.Value, 0f);
                     offset = HudOverlay.Height(lines, hudFontSize.Value) + 6f;
