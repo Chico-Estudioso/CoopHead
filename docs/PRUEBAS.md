@@ -33,6 +33,8 @@ Las pruebas unitarias no sustituyen a las de integración ni a las manuales en e
 - Cambios de mando/configuración si afectan a la identificación del jugador.
 
 ## Manuales
+La matriz de verificación de hooks, con lo que debe aparecer en el log en cada paso, está en `docs/GAME_HOOKS.md`.
+
 - Al menos un nivel de plataformas.
 - Al menos un jefe.
 - Ambos jugadores mueren y rescatan por turnos.

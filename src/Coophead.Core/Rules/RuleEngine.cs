@@ -147,6 +147,36 @@ namespace Coophead.Core.Rules
             return result;
         }
 
+        /// <summary>
+        /// El jugador vuelve a la partida sin que su pareja le rescate (por ejemplo, robando un corazón con el fantasma
+        /// fuera de pantalla). Solo se marca como vivo: no cuenta para contadores, créditos ni límites (ADR-004).
+        /// </summary>
+        /// <returns><see cref="EventStatus.Ignored"/> si ya estaba vivo, que es lo normal tras un rescate por parry.</returns>
+        public EventStatus OnPlayerRevivedWithoutRescue(PlayerSlot player, string eventKey)
+        {
+            string reason = CheckCommon(player, eventKey);
+            if (reason != null)
+            {
+                log.Warning("Evento ignorado: " + reason);
+                return EventStatus.Ignored;
+            }
+
+            if (!Session.TryMarkProcessed("self:" + eventKey))
+            {
+                return EventStatus.Duplicate;
+            }
+
+            PlayerRoundStats stats = Session.Get(player);
+            if (stats.IsAlive)
+            {
+                return EventStatus.Ignored;
+            }
+
+            stats.IsAlive = true;
+            log.Info(player.Label() + " vuelve a la partida sin rescate: no cuenta para las reglas.");
+            return EventStatus.Applied;
+        }
+
         private RestartReason EvaluateLimits(PlayerRoundStats rescued)
         {
             int playerLimit = config.GetReviveLimit(rescued.Slot);

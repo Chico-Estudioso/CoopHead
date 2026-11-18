@@ -51,8 +51,45 @@ Mapeo previsto: `PlayerId.PlayerOne` → `PlayerSlot.PlayerOne`, `PlayerId.Playe
 ## Efectos de la ruleta
 Pendiente de auditoría en M4: velocidad de movimiento, inversión del eje horizontal sin afectar a menús ni pausa, cadencia de disparo y dash. Ningún efecto se activará sin hook verificado que permita restaurar el valor original.
 
+## Instrumentación implementada
+`src/Coophead.Plugin/GameIntegration/GameHooks.cs` instala estos hooks al arrancar, **resolviéndolos por nombre** (Coophead no compila contra `Assembly-CSharp`):
+
+| Hook instalado | Lectura | Traducción (`GameEventTranslator`) |
+|---|---|---|
+| `Level.Awake` | tipo e instancia del nivel | `LevelStarted` |
+| `Level.OnWin`, `Level._OnLose`, `Level.OnDestroy` | instancia del nivel | `LevelEnded` (se ignora si es de una instancia anterior) |
+| `Level.OnPlayerDeath` | `playerId` del evento | Solo diagnóstico |
+| `PlayerDeathEffect.Start` | `playerId` e instancia del fantasma | `OnPlayerDied` con clave `ghost:<id>` |
+| `PlayerDeathParrySwitch.OnParryPrePause` | `id` del jugador que hace parry; fantasma padre | `OnPlayerRevived` con la misma clave `ghost:<id>` |
+| `PlayerDeathEffect.ReviveOutOfFrame` | `playerId` | Solo diagnóstico (robo de corazón, no cuenta) |
+| `PlayerStatsManager.OnRevive` | `basePlayer.id` | Marca vivo sin contar si el Core aún lo tenía por muerto |
+
+- Todos son **postfix de solo lectura** envueltos en `try/catch`: no cambian argumentos, retornos ni estado del juego.
+- Si un tipo o método no existe en la versión instalada, ese hook queda marcado `FALTA` en el log y el resto sigue funcionando.
+- Con `AplicarReglas = false` (por defecto) los eventos solo se escriben en el log con número de secuencia `[#n]`.
+
+## Cómo verificar en la copia de pruebas
+1. Instala el plugin (ver `docs/INSTALACION_LOCAL.md`) con `Diagnostico = true` y `AplicarReglas = false`.
+2. Arranca el juego y busca en `BepInEx/LogOutput.log` las líneas `Hook OK …` / `Hook FALTA …` y el resumen «Hooks instalados: X de 9».
+3. Juega un jefe en cooperativo y ejecuta esta matriz, anotando los números `[#n]` que aparecen:
+
+| Paso | Esperado en el log |
+|---|---|
+| Entrar al nivel | `Nivel iniciado: <TipoDeNivel>` una sola vez |
+| Muere P1 | `Muerte notificada por el nivel: P1` y `Fantasma <id> de P1` |
+| P2 hace parry al corazón de P1 | `Rescate por parry del fantasma <id>: P2 rescata a P1` con el mismo `<id>`, seguido de `Reanimación confirmada por el juego: P1` |
+| Lo mismo al revés | Igual con P1 y P2 intercambiados |
+| El fantasma sube fuera de pantalla y roba un corazón | `Robo de corazón …` y `Reanimación confirmada por el juego` (sin «Rescate por parry») |
+| Mueren los dos | Dos fantasmas y `Nivel terminado (Lost)` |
+| Retry tras perder | `Nivel terminado (Exited)` del anterior o «instancia anterior… se ignora», y un `Nivel iniciado` nuevo |
+| Ganar | `Nivel terminado (Won)` |
+| Salir al mapa desde la pausa | `Nivel terminado (Exited)` |
+| Repetirlo en un nivel de avión y en uno de plataformas | Mismos eventos, o anotar las diferencias |
+
+4. Si todo coincide, cambia el estado de cada hook a `Verificado` en este documento, indicando la versión del juego, y activa `AplicarReglas`.
+
 ## Plan de verificación (M2)
-1. Parches de solo registro (postfix sin modificar valores ni retornos), con número de sesión y clave por evento.
+1. Parches de solo registro (postfix sin modificar valores ni retornos), con número de sesión y clave por evento. **Hecho.**
 2. Matriz manual: muere P1 y le rescata P2; al revés; ambos alternan; robo de corazón; ambos muertos; retry; salir al mapa; cutscene.
 3. Para cada hook: confirmar que se aplica, cuántas veces se dispara y con qué jugador.
 4. Solo entonces marcar como `Verificado` y activar las reglas dependientes.

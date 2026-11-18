@@ -22,7 +22,9 @@ Plugin `net35` que compila contra BepInEx 5.4.21 y Unity 2017.4.9 (solo compilac
 - Crear build reproducible sin incluir DLLs propietarias.
 - Resultado: plugin detectado por BepInEx en copia de pruebas.
 
-## M2 — Auditoría de eventos de jugador ⬜
+## M2 — Auditoría de eventos de jugador 🟡
+Instrumentación hecha: 9 hooks candidatos resueltos por nombre, postfix de solo lectura, traducción probada en el Core y procedimiento de verificación en `docs/GAME_HOOKS.md`. Falta ejecutar la matriz manual en la copia de pruebas.
+
 - Identificar Player 1 y Player 2 de forma fiable.
 - Detectar muerte, aparición del fantasma, reanimación exitosa y fallo de rescate.
 - Detectar cambio/fin de nivel y reinicio.

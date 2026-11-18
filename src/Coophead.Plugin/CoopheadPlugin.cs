@@ -4,8 +4,11 @@ using BepInEx;
 using BepInEx.Configuration;
 using Coophead.Core;
 using Coophead.Core.Configuration;
+using Coophead.Core.Integration;
 using Coophead.Core.Roulette;
 using Coophead.Core.Thanks;
+using Coophead.Plugin.GameIntegration;
+using HarmonyLib;
 using UnityEngine;
 
 namespace Coophead.Plugin
@@ -21,6 +24,9 @@ namespace Coophead.Plugin
 
         private ConfigEntry<bool> modEnabled;
         private ConfigEntry<bool> diagnostics;
+        private ConfigEntry<bool> installHooks;
+        private ConfigEntry<bool> applyRules;
+        private Harmony harmony;
         private ConfigEntry<KeyboardShortcut> thanksKeyP1;
         private ConfigEntry<KeyboardShortcut> thanksKeyP2;
         private CoopheadSettings settings;
@@ -58,6 +64,7 @@ namespace Coophead.Plugin
                 SubscribeDiagnostics();
                 active = modEnabled.Value;
                 LogEnvironment();
+                InstallGameHooks();
             }
             catch (Exception e)
             {
@@ -114,6 +121,12 @@ namespace Coophead.Plugin
                 Config.SettingChanged -= OnSettingChanged;
             }
 
+            GameHooks.Uninstall();
+            if (harmony != null)
+            {
+                harmony.UnpatchSelf();
+            }
+
             SafeShutdown();
         }
 
@@ -123,10 +136,44 @@ namespace Coophead.Plugin
                 "Interruptor general. Al desactivarlo se restauran todos los efectos y no se castiga a nadie.");
             diagnostics = Config.Bind(GeneralSection, "Diagnostico", true,
                 "Escribe en el log de BepInEx cada evento y decisión del mod. No registra audio ni datos personales.");
+            installHooks = Config.Bind(GeneralSection, "Hooks", true,
+                "Instala los hooks de solo lectura que registran inicio y fin de nivel, muertes y rescates (requiere reiniciar el juego). Si un hook no existe en tu versión, se desactiva solo.");
+            applyRules = Config.Bind(GeneralSection, "AplicarReglas", false,
+                "Envía las muertes y rescates detectados a las reglas (contadores, agradecimiento y ruleta). Actívalo solo cuando hayas comprobado en el log que los eventos son correctos (docs/GAME_HOOKS.md).");
             thanksKeyP1 = Config.Bind(CoopheadSettings.ThanksSection, "TeclaGraciasP1", new KeyboardShortcut(KeyCode.F7),
                 "Tecla de respaldo para que P1 dé las gracias. Comprueba que no choca con tus controles ni con otros mods.");
             thanksKeyP2 = Config.Bind(CoopheadSettings.ThanksSection, "TeclaGraciasP2", new KeyboardShortcut(KeyCode.F8),
                 "Tecla de respaldo para que P2 dé las gracias. Comprueba que no choca con tus controles ni con otros mods.");
+        }
+
+        private void InstallGameHooks()
+        {
+            if (!installHooks.Value)
+            {
+                Logger.LogInfo("Hooks desactivados en la configuración: Coophead no observa el juego.");
+                return;
+            }
+
+            var translator = new GameEventTranslator(
+                session,
+                log,
+                () => modEnabled.Value && applyRules.Value && !failed,
+                () => DiagnosticsEnabled);
+            harmony = new Harmony(PluginInfo.Guid);
+            IList<GameHooks.HookStatus> statuses = GameHooks.Install(harmony, translator, log);
+            int installed = 0;
+            foreach (GameHooks.HookStatus status in statuses)
+            {
+                if (status.Installed)
+                {
+                    installed++;
+                }
+
+                Logger.LogInfo("Hook " + status);
+            }
+
+            Logger.LogInfo("Hooks instalados: " + installed + " de " + statuses.Count + ". Reglas "
+                + (applyRules.Value ? "APLICADAS" : "en modo solo registro") + ".");
         }
 
         private void OnSettingChanged(object sender, SettingChangedEventArgs e)
@@ -210,7 +257,7 @@ namespace Coophead.Plugin
             Logger.LogInfo(PluginInfo.Name + " " + PluginInfo.Version + " cargado.");
             Logger.LogInfo("Juego: versión " + Application.version + ", Unity " + Application.unityVersion
                 + ", plataforma " + Application.platform + ", proceso de " + (IntPtr.Size * 8) + " bits, runtime " + Environment.Version + ".");
-            Logger.LogInfo("Integración con el juego: desactivada hasta verificar los hooks (M2). Efectos: deshabilitados por seguridad.");
+            Logger.LogInfo("Efectos de la ruleta: deshabilitados por seguridad hasta M4. Reinicio de nivel: no conectado.");
             Logger.LogInfo("Reglas: límite P1 " + coreConfig.Rules.PlayerOneReviveLimit
                 + ", P2 " + coreConfig.Rules.PlayerTwoReviveLimit
                 + ", equipo " + coreConfig.Rules.TeamReviveLimit

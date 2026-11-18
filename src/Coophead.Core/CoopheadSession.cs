@@ -145,6 +145,12 @@ namespace Coophead.Core
             return result;
         }
 
+        /// <summary>Vuelta a la partida sin rescate (robo de corazón u otra vía): no cuenta ni abre ventana.</summary>
+        public EventStatus OnPlayerRevivedWithoutRescue(PlayerSlot player, string eventKey, float now)
+        {
+            return rules.OnPlayerRevivedWithoutRescue(player, eventKey);
+        }
+
         /// <summary>Texto reconocido por el servicio de voz local, entregado solo durante una ventana.</summary>
         public ThanksWindow OnTranscript(string transcript, float now)
         {
