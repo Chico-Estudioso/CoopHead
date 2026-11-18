@@ -1,22 +1,47 @@
-# Cuphead Co-op Rules
+# Coophead
 
-Plugin de reglas personalizadas para el cooperativo local de Cuphead.
+Plugin de reglas personalizadas para el cooperativo local de dos jugadores de Cuphead, pensado para BepInEx 5.
 
-## Funcionalidades previstas
-- Contadores separados por jugador y nivel.
-- Límite de reanimaciones recibidas y reinicio configurable.
-- Créditos de ayuda bilaterales por rescatar a la pareja.
-- Detección opcional de fantasma no rescatado, si se verifica el evento correcto.
-- Ventana de agradecimiento por voz local de tres segundos.
-- Ruleta de penalizaciones temporales.
-- Ajuste adaptativo de la intensidad según la presión acumulada de cada jugador.
-- HUD, configuración y resumen de nivel.
+## Qué hace
+- Contadores por jugador y nivel: muertes, rescates dados y recibidos.
+- Créditos de ayuda bilaterales: rescatar a tu pareja compensa tus propias reanimaciones.
+- Límite individual (3) y límite de equipo (6) de reanimaciones por nivel, con reinicio configurable.
+- Ventana de agradecimiento de 3 s tras cada rescate: basta con decir «gracias» («Gracias, Cari», «Gracias, amor»…), por voz local o con una tecla de respaldo.
+- Ruleta de penalizaciones temporales de 4 s: movimiento lento, controles invertidos, disparo lento, dash limitado, castigo doble o sin penalización.
+- Director de equilibrio transparente que protege a quien acumula más presión.
+
+Reglas completas en [`docs/REGLAS_DE_JUEGO.md`](docs/REGLAS_DE_JUEGO.md).
 
 ## Estado
-Proyecto en fase de investigación. No se debe asumir compatibilidad hasta completar M0 y probar el plugin en la instalación concreta de Cuphead.
+| Fase | Estado |
+|---|---|
+| M0 Investigación | De escritorio hecha ([informe](docs/INFORME_M0.md)); falta inspeccionar la instalación local |
+| Lógica de reglas, ruleta, equilibrio y agradecimiento | Implementada en `Coophead.Core` con pruebas unitarias |
+| Plugin BepInEx, hooks del juego, efectos, voz y HUD | Pendiente |
+
+Nada se ha probado todavía dentro de Cuphead. No se debe asumir compatibilidad hasta verificar los hooks en la copia local (ver [`docs/GAME_HOOKS.md`](docs/GAME_HOOKS.md)).
+
+## Estructura
+```
+src/Coophead.Core/         Lógica pura (net35 + netstandard2.0), sin Unity ni Cuphead
+tests/Coophead.Core.Tests/ Pruebas unitarias (xUnit, net8.0)
+docs/                      Reglas, arquitectura, compatibilidad, hooks y decisiones (ADR)
+prompts/                   Guías de trabajo por fase
+```
+
+## Compilar y probar
+Requiere el SDK de .NET 8.
+
+```bash
+dotnet build Coophead.sln -c Release
+```
+
+```bash
+dotnet test Coophead.sln -c Release
+```
+
+## Instalación en el juego
+Todavía no hay plugin instalable. Cuando exista, se instalará solo en una **copia de pruebas** de Cuphead con BepInEx 5.4.x; ver [`docs/INSTALACION_LOCAL.md`](docs/INSTALACION_LOCAL.md). El repositorio nunca incluye archivos del juego.
 
 ## Desarrollo
-Consulta `00_LEEME_PRIMERO.md` y `ROADMAP.md`. Las instrucciones permanentes para Claude Code están en `CLAUDE.md` y `AGENTS.md`.
-
-## Instalación de desarrollo
-No instales versiones de BepInEx ni copies DLLs hasta que M0 haya detectado la arquitectura, runtime y versión de Cuphead. Mantén una copia de pruebas separada.
+Instrucciones para Claude Code en [`CLAUDE.md`](CLAUDE.md) y [`AGENTS.md`](AGENTS.md); fases en [`ROADMAP.md`](ROADMAP.md).

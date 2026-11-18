@@ -6,6 +6,14 @@ La web general de Mortar indica que puede localizar juegos desde una tienda o de
 ## BepInEx manual
 La documentación de BepInEx indica que la instalación se realiza extrayendo los archivos correctos en la raíz del juego, donde está el ejecutable, y ejecutando el juego una vez para generar las carpetas. Hay builds x86 y x64; elegir según el ejecutable.
 
+Según la evidencia comunitaria (`docs/INFORME_M0.md`): BepInEx **5.4.x x64** para Cuphead 1.3 o posterior y x86 para versiones anteriores. Para arrancar sin plugins, DebugMod usa un `.bat` que desactiva Doorstop; si el plugin no carga en Windows, recomienda añadir `steam_appid.txt` junto al ejecutable. Comprobar ambos puntos en la copia local antes de adoptarlos.
+
+## Instalar Coophead en la copia de pruebas
+1. Compilar con `dotnet build Coophead.sln -c Release`.
+2. Copiar las DLL del plugin (`Coophead.dll` cuando exista y `Coophead.Core.dll` de `net35`) a `BepInEx/plugins/Coophead/` de la copia de pruebas.
+3. Arrancar el juego y revisar `BepInEx/LogOutput.log`.
+4. Desinstalar = borrar `BepInEx/plugins/Coophead/` y su archivo de configuración en `BepInEx/config/`.
+
 ## Recomendación de desarrollo
 - Mantener la instalación original sin modificar.
 - Crear una copia de prueba independiente.

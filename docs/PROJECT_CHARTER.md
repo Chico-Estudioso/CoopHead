@@ -1,5 +1,7 @@
 # Acta del proyecto
 
+Proyecto: **Coophead**.
+
 ## Propósito
 Añadir un conjunto de desafíos configurables al cooperativo local de Cuphead para dos jugadores. El mod debe crear tensión y humor sin castigar siempre al mismo jugador.
 
@@ -8,7 +10,7 @@ Dos personas que juegan en cooperativo local con dos mandos o con la configuraci
 
 ## Principios
 - Reglas bilaterales y configurables.
-- El Jugador 2 tiene un énfasis inicial ligeramente mayor, no una desventaja fija.
+- P1 y P2 tienen las mismas reglas por defecto; existe un foco opcional en P2, desactivado de inicio (ADR-004).
 - Los créditos de ayuda premian rescatar a la pareja.
 - Los efectos son breves, reversibles y nunca deben bloquear permanentemente los controles.
 - La voz funciona localmente y es opcional.

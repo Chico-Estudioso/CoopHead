@@ -5,7 +5,7 @@ Añadir reconocimiento opcional de una frase pronunciada después de una reanima
 
 ## Comportamiento
 - Tras una reanimación confirmada, inicia una ventana de tres segundos.
-- Frase inicial: «Gracias, Kari».
+- Frase: basta con «gracias» («Gracias, Cari», «Gracias, amor»…), válida para ambos jugadores (ADR-004). La coincidencia ya está en `Coophead.Core` (`ThanksPhraseMatcher`).
 - Frase configurable por el usuario.
 - Si se reconoce con confianza suficiente, se registra agradecimiento y se cancela la ruleta asociada a ese rescate.
 - Si no se reconoce, se permite continuar con la regla configurada.

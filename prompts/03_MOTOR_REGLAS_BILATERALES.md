@@ -13,6 +13,7 @@ Implementar reglas internas desacopladas de los hooks del juego. El motor recibe
 - Créditos y contadores del nivel se reinician al comenzar otro nivel.
 - La misma regla se aplica a P1 y P2. El foco predeterminado puede dar algo más de protagonismo a P2, pero no puede convertirlo en objetivo fijo.
 - Límite inicial sugerido: tres reanimaciones recibidas por nivel, configurable.
+- Límite de equipo: seis reanimaciones totales por nivel, sin descontar créditos (ADR-004).
 - Al alcanzar el límite, solicitar reinicio del nivel únicamente mediante el hook verificado.
 
 ## Diseño

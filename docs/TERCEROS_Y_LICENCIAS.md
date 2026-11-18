@@ -13,3 +13,17 @@ Referencias iniciales para investigar (no son dependencias aprobadas automática
 - Vosk: https://alphacephei.com/vosk/
 
 No incluir en la release ensamblados propietarios de Cuphead ni archivos del juego.
+
+## Dependencias actuales
+| Nombre | Versión | Licencia | ¿Se redistribuye? | Motivo |
+|---|---|---|---|---|
+| xUnit | 2.9.2 | Apache 2.0 | No (solo pruebas) | Pruebas unitarias de `Coophead.Core`. |
+| xunit.runner.visualstudio | 2.8.2 | Apache 2.0 | No (solo pruebas) | Ejecutar las pruebas con `dotnet test`. |
+| Microsoft.NET.Test.Sdk | 17.11.1 | MIT | No (solo pruebas) | Infraestructura de pruebas. |
+| Microsoft.NETFramework.ReferenceAssemblies (implícito) | 1.0.x | MIT | No (solo compilación) | Compilar el target `net35` fuera de Windows. |
+
+`Coophead.Core` no tiene dependencias en tiempo de ejecución.
+
+## Referencias leídas sin reutilizar código
+- Cuphead.DebugMod y CupHeads no publican licencia: se consultan solo para documentar nombres de API del juego. No se copia su código.
+- Cuphead 3-Player Co-op es MIT: se ha usado como referencia de hooks; si en el futuro se adapta código suyo, se conservará su aviso de copyright.
