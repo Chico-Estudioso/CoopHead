@@ -11,6 +11,7 @@ Según la evidencia comunitaria (`docs/INFORME_M0.md`): BepInEx **5.4.x x64** pa
 ## Instalar Coophead en la copia de pruebas
 1. Compilar con `dotnet build Coophead.sln -c Release` o descargar el artefacto `Coophead-plugin-sin-probar` de la última ejecución de la CI.
 2. Copiar `src/Coophead.Plugin/bin/Release/net35/Coophead.dll` y `src/Coophead.Core/bin/Release/net35/Coophead.Core.dll` a `BepInEx/plugins/Coophead/` de la copia de pruebas. No copiar BepInEx, Harmony ni UnityEngine: los aporta la instalación.
+   - Para la voz (opcional, Windows): copiar también `src/Coophead.Voice/bin/Release/net48/Coophead.Voice.exe` y `Coophead.Voice.exe.config` en la misma carpeta y activar `VozActivada`.
 3. Arrancar el juego y revisar `BepInEx/LogOutput.log`. Deben aparecer las líneas «Coophead 0.1.0 cargado.» y «Juego: versión …, Unity …, plataforma …, proceso de … bits». Anota esos datos en `docs/COMPATIBILIDAD.md`.
 4. Desinstalar = borrar `BepInEx/plugins/Coophead/` y su archivo de configuración en `BepInEx/config/`.
 

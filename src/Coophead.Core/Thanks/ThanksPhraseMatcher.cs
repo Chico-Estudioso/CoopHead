@@ -158,6 +158,36 @@ namespace Coophead.Core.Thanks
             return phrases;
         }
 
+        /// <summary>
+        /// Igual que <see cref="BuildGrammar"/> pero conservando tildes y eñes («gracias cariño»), que es lo que
+        /// necesita un reconocedor para pronunciar bien las palabras. La comparación posterior sigue normalizando.
+        /// </summary>
+        public IList<string> BuildSpokenGrammar()
+        {
+            var phrases = new List<string>();
+            string required = Voice.VoiceProtocol.SafePhrase(config.RequiredWord);
+            if (required.Length == 0)
+            {
+                return phrases;
+            }
+
+            if (!config.RequireName)
+            {
+                phrases.Add(required);
+            }
+
+            foreach (string name in config.AcceptedNames)
+            {
+                string spoken = Voice.VoiceProtocol.SafePhrase(name);
+                if (spoken.Length > 0 && !phrases.Contains(required + " " + spoken))
+                {
+                    phrases.Add(required + " " + spoken);
+                }
+            }
+
+            return phrases;
+        }
+
         private static string[] Tokenize(string text)
         {
             string normalized = Normalize(text);

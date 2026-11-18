@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coophead.Core.Tests", "test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coophead.Plugin", "src\Coophead.Plugin\Coophead.Plugin.csproj", "{39A4B50A-9211-4BAC-B7B1-1957F231DE8B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coophead.Voice", "src\Coophead.Voice\Coophead.Voice.csproj", "{47ABB537-86E5-414E-A54F-9989F125BCF0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,10 +36,15 @@ Global
 		{39A4B50A-9211-4BAC-B7B1-1957F231DE8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39A4B50A-9211-4BAC-B7B1-1957F231DE8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39A4B50A-9211-4BAC-B7B1-1957F231DE8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47ABB537-86E5-414E-A54F-9989F125BCF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47ABB537-86E5-414E-A54F-9989F125BCF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47ABB537-86E5-414E-A54F-9989F125BCF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47ABB537-86E5-414E-A54F-9989F125BCF0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1C455337-46EF-4B81-95F4-E319052E7906} = {6DD8E6E5-EE32-44BF-8672-EA480DFBDC36}
 		{48E74EF9-CFA9-48A1-BEB0-80FFFB3CD2DC} = {4B62FB02-BEF7-4B97-BA98-84208474B7B1}
 		{39A4B50A-9211-4BAC-B7B1-1957F231DE8B} = {6DD8E6E5-EE32-44BF-8672-EA480DFBDC36}
+		{47ABB537-86E5-414E-A54F-9989F125BCF0} = {6DD8E6E5-EE32-44BF-8672-EA480DFBDC36}
 	EndGlobalSection
 EndGlobal

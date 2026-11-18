@@ -15,7 +15,7 @@ jobs:
           dotnet-version: 8.0.x
       - name: Restaurar
         run: dotnet restore Coophead.sln
-      - name: Compilar Core (net35 y netstandard2.0) y plugin (net35)
+      - name: Compilar Core, plugin y ayudante de voz
         run: dotnet build Coophead.sln -c Release --no-restore
       - name: Pruebas unitarias
         run: dotnet test Coophead.sln -c Release --no-build --verbosity normal
@@ -24,6 +24,7 @@ jobs:
           mkdir -p artifacts/BepInEx/plugins/Coophead
           cp src/Coophead.Plugin/bin/Release/net35/Coophead.dll artifacts/BepInEx/plugins/Coophead/
           cp src/Coophead.Core/bin/Release/net35/Coophead.Core.dll artifacts/BepInEx/plugins/Coophead/
+          cp src/Coophead.Voice/bin/Release/net48/Coophead.Voice.exe src/Coophead.Voice/bin/Release/net48/Coophead.Voice.exe.config artifacts/BepInEx/plugins/Coophead/
       - uses: actions/upload-artifact@v4
         with:
           name: Coophead-plugin-sin-probar
