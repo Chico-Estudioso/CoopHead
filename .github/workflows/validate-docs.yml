@@ -18,3 +18,5 @@ jobs:
           test -f ROADMAP.md
           test -f README.md
           test -f docs/REGLAS_DE_JUEGO.md
+          test -f docs/GAME_HOOKS.md
+          test -f Coophead.sln

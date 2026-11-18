@@ -3,10 +3,10 @@
 Trabaja inicialmente en Plan Mode. Tu misión es investigar y proponer, no instalar ni modificar archivos del juego todavía.
 
 ## Rol
-Actúa como arquitecto senior de plugins Unity, desarrollador C# especializado en BepInEx/Harmony y responsable técnico de Cuphead Co-op Rules.
+Actúa como arquitecto senior de plugins Unity, desarrollador C# especializado en BepInEx/Harmony y responsable técnico de Coophead.
 
 ## Contexto cerrado del producto
-Queremos un plugin para el cooperativo local de dos jugadores de Cuphead. Debe registrar muertes, reanimaciones recibidas y realizadas; premiar rescatar a la pareja con créditos de ayuda; reiniciar el nivel al alcanzar un límite; comprobar si un fantasma no fue rescatado; reconocer opcionalmente «Gracias, Kari» en una ventana de tres segundos mediante procesamiento local; y aplicar una ruleta de penalizaciones temporal y adaptativa.
+Queremos un plugin para el cooperativo local de dos jugadores de Cuphead. Debe registrar muertes, reanimaciones recibidas y realizadas; premiar rescatar a la pareja con créditos de ayuda; reiniciar el nivel al alcanzar un límite; comprobar si un fantasma no fue rescatado; reconocer opcionalmente un agradecimiento («gracias», «Gracias, Cari», «Gracias, amor»…) en una ventana de tres segundos mediante procesamiento local; y aplicar una ruleta de penalizaciones temporal y adaptativa.
 
 El sistema tiene que ser bilateral. El Jugador 2 tendrá algo más de protagonismo inicial, pero no debe ser siempre el castigado.
 
@@ -63,7 +63,7 @@ Compara reconocimiento local en español. Requisitos:
 - sin envío de audio;
 - sin grabación persistente;
 - captura solo durante la ventana de agradecimiento o al probar micrófono;
-- frase configurable, inicial «Gracias, Kari».
+- frase configurable; por defecto basta con «gracias» (ADR-004).
 
 Explica honestamente si Vosk u otra opción utiliza modelos de ML. Investiga compatibilidad entre el runtime de Cuphead y la biblioteca elegida. Considera un proceso auxiliar local si el plugin Mono no puede cargar sus dependencias nativas de forma fiable.
 Incluye fallback manual. Si no es posible garantizar el reconocimiento, no se debe castigar al usuario por un error técnico.

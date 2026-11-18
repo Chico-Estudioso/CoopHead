@@ -1,6 +1,6 @@
 # ADR-001 — Plugin BepInEx
 
-Estado: Propuesto, pendiente de M0.
+Estado: Propuesto. M0 de escritorio favorable (BepInEx 5.4.x, `net35`); pendiente de confirmar en la copia local.
 
 ## Contexto
 Cuphead es un juego Unity y la comunidad utiliza plugins BepInEx. La instalación local del usuario puede diferir de una instalación estándar de Steam/Epic.

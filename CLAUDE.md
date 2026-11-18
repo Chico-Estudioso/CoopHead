@@ -1,4 +1,4 @@
-# Instrucciones del proyecto — Cuphead Co-op Rules
+# Instrucciones del proyecto — Coophead
 
 Lee `AGENTS.md`, `ROADMAP.md` y los documentos relevantes de `docs/` antes de modificar código.
 
@@ -13,7 +13,7 @@ Desarrollar un plugin BepInEx para Cuphead que añada reglas configurables al co
 
 ## Reglas obligatorias
 1. No trabajes directamente sobre `main`.
-2. Cada tarea se realiza en una rama `feat/...`, `fix/...`, `docs/...` o `chore/...`.
+2. Cada tarea se realiza en una rama `feat/...`, `fix/...`, `docs/...` o `chore/...`. En sesiones de Claude Code en la nube se usa la rama de sesión asignada (`claude/...`).
 3. No hagas merge de Pull Requests sin aprobación expresa del usuario.
 4. No uses `git push --force`, `reset --hard`, `clean -fd` ni operaciones destructivas sin autorización expresa.
 5. No cambies configuración global de Git ni credenciales.
@@ -27,6 +27,13 @@ Desarrollar un plugin BepInEx para Cuphead que añada reglas configurables al co
 13. No redistribuyas bibliotecas o código de terceros sin comprobar su licencia y condiciones.
 14. Mantén las reglas de juego separadas de los hooks y de la interfaz.
 15. Todo efecto temporal debe restaurar el estado original incluso si el nivel cambia, el jugador muere o se produce un error.
+
+## Estructura y comandos
+- `src/Coophead.Core`: lógica pura (`net35` + `netstandard2.0`). No puede referenciar Unity, BepInEx ni ensamblados de Cuphead, y debe seguir compilando para `net35` (sin `Task`, `Tuple`, `IReadOnlyList`, `string.IsNullOrWhiteSpace`, etc.).
+- `tests/Coophead.Core.Tests`: pruebas xUnit (`net8.0`).
+- Compilar: `dotnet build Coophead.sln -c Release`.
+- Probar: `dotnet test Coophead.sln -c Release`.
+- Hooks candidatos y su estado: `docs/GAME_HOOKS.md`. Decisiones: `docs/decisions/`.
 
 ## Git y Pull Requests
 - `main` es la rama estable y protegida.

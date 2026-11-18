@@ -2,6 +2,24 @@
 
 Esta arquitectura es una hipótesis inicial. M0 debe confirmar framework, API, referencias y hooks contra la versión real instalada.
 
+## Estado de implementación
+La parte que no depende del juego ya existe en `src/Coophead.Core` (biblioteca `net35` sin Unity):
+
+| Componente propuesto | Implementación | Estado |
+|---|---|---|
+| PlayerStateTracker | `Rules/PlayerRoundStats`, `Rules/LevelSessionState` | Hecho, con pruebas |
+| RuleEngine | `Rules/RuleEngine` | Hecho, con pruebas |
+| HelpCreditService | `Rules/HelpCreditService` | Hecho, con pruebas |
+| BalanceDirector | `Roulette/BalanceDirector` | Hecho, con pruebas |
+| RouletteService | `Roulette/RouletteService` | Hecho, con pruebas |
+| PenaltyController | `Roulette/PenaltyScheduler` (tiempos y restauración) + `IPenaltyApplier` (lo implementa la integración) | Core hecho; efectos en el juego pendientes (M4) |
+| VoiceService | `Thanks/ThanksWindowTracker`, `Thanks/ThanksPhraseMatcher` (sin audio) | Core hecho; captura pendiente (M5) |
+| ConfigurationService | `CoopheadConfig` con validación por sección | Core hecho; enlace con BepInEx pendiente (M6) |
+| Flujo de reanimación | `CoopheadSession` | Hecho, con pruebas |
+| PluginBootstrap, GameIntegration, HUD | — | Pendiente (M1, M2, M6) |
+
+La integración con el juego solo debe: traducir hooks verificados a llamadas de `CoopheadSession` (`StartLevel`, `OnPlayerDied`, `OnPlayerRevived`, `EndLevel`, `Tick`), implementar `IPenaltyApplier` y ejecutar lo que piden sus eventos (`RestartRequested`, `RouletteSpun`, `ThanksWindowOpened/Closed`).
+
 ## Componentes
 
 ### PluginBootstrap

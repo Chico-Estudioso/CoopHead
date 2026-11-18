@@ -18,6 +18,13 @@ M0 debe comparar:
 
 No incluir modelos grandes dentro del repositorio. El modelo se instalará localmente, se descargará desde su fuente oficial por el usuario o se empaquetará solo después de auditar su licencia y tamaño.
 
+## Frase reconocida (implementado en Coophead.Core)
+- Vale para los dos jugadores (ADR-004). Por defecto basta con «gracias»; los apelativos `cari`, `kari` y `amor` se añaden a la gramática y pueden exigirse con `RequireName`.
+- El texto se normaliza (minúsculas, sin tildes ni signos) antes de comparar.
+- `ThanksPhraseMatcher.BuildGrammar()` devuelve las frases para un reconocedor con gramática cerrada, lo que reduce falsos positivos.
+- El Core solo recibe texto ya reconocido, en memoria; nunca audio.
+- Con un solo micrófono no se distingue quién habla: cualquiera de los dos puede decir la frase.
+
 ## Fallback
 Debe existir una opción para que el jugador confirme el agradecimiento mediante una tecla o botón, si así se configura. Si el reconocedor no está disponible, no debe penalizarse automáticamente a alguien por un fallo técnico.
 
