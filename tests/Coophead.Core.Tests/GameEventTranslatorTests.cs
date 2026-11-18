@@ -148,6 +148,24 @@ namespace Coophead.Core.Tests
         }
 
         [Fact]
+        public void TrasPedirReinicioElFinDeNivelSeMarcaComoReinicio()
+        {
+            CoopheadSession session;
+            GameEventTranslator translator = NewTranslator(out session);
+            session.Rules.Config.TeamReviveLimit = 1;
+            LevelSummary summary = null;
+            session.LevelEnded += s => summary = s;
+            translator.LevelStarted("FlowerLevel", 100);
+            translator.GhostSpawned(GameP1, 3, 1f);
+            translator.ParryRevive(GameP1, GameP2, 3, 2f);
+
+            translator.LevelEnded(LevelEndReason.Exited, "Level.OnDestroy", 100);
+
+            Assert.Equal(LevelEndReason.Restarted, summary.Reason);
+            Assert.Equal(RestartReason.TeamLimit, summary.RestartReason);
+        }
+
+        [Fact]
         public void ElFinDeNivelLimpiaLaSesion()
         {
             CoopheadSession session;
