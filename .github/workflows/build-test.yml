@@ -1,0 +1,21 @@
+name: Compilar y probar Core
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restaurar
+        run: dotnet restore Coophead.sln
+      - name: Compilar (net35 y netstandard2.0)
+        run: dotnet build Coophead.sln -c Release --no-restore
+      - name: Pruebas unitarias
+        run: dotnet test Coophead.sln -c Release --no-build --verbosity normal
