@@ -2,8 +2,8 @@
 
 Estado a 18/11/2026. Leyenda: ✅ hecho · 🟡 parcial · ⬜ pendiente.
 
-## M0 — Investigación y entorno local 🟡
-Hecha la investigación de escritorio (`docs/INFORME_M0.md`): BepInEx 5.4.x, `net35`, hooks candidatos y riesgos. Pendiente la inspección de la instalación local.
+## M0 — Investigación y entorno local ✅
+Investigación de escritorio (`docs/INFORME_M0.md`) confirmada con el log del usuario: Cuphead 1.3.4 x64, Unity 2017.4.9f1, Mono CLR 2.0, BepInEx 5.4.23.5. Mortar no evaluado.
 
 - Identificar `Cuphead.exe`, versión, arquitectura, runtime Unity/Mono y ensamblados.
 - Evaluar Mortar con instalación desde carpeta.
@@ -13,8 +13,8 @@ Hecha la investigación de escritorio (`docs/INFORME_M0.md`): BepInEx 5.4.x, `ne
 - Validar opciones de reconocimiento de voz local y requisitos/licencias.
 - Resultado: informe técnico y decisión GO/NO-GO.
 
-## M1 — Plugin mínimo 🟡
-Plugin `net35` que compila contra BepInEx 5.4.21 y Unity 2017.4.9 (solo compilación), enlaza la configuración y registra versión de juego, Unity y arquitectura. Falta comprobar que BepInEx lo carga en la copia de pruebas.
+## M1 — Plugin mínimo ✅
+BepInEx carga `Coophead 0.1.0` en Cuphead 1.3.4 y registra versión, Unity y arquitectura (`docs/pruebas/2026-11-19-carga-1.3.4.md`).
 
 - Crear solución C# con target framework verificado.
 - Referenciar BepInEx/Harmony y ensamblados de juego de forma local.
@@ -23,7 +23,7 @@ Plugin `net35` que compila contra BepInEx 5.4.21 y Unity 2017.4.9 (solo compilac
 - Resultado: plugin detectado por BepInEx en copia de pruebas.
 
 ## M2 — Auditoría de eventos de jugador 🟡
-Instrumentación hecha: 9 hooks candidatos resueltos por nombre, postfix de solo lectura, traducción probada en el Core y procedimiento de verificación en `docs/GAME_HOOKS.md`. Falta ejecutar la matriz manual en la copia de pruebas.
+Instrumentación hecha y **los 9 hooks existen en 1.3.4**: resueltos por nombre, postfix de solo lectura, traducción probada en el Core y procedimiento de verificación en `docs/GAME_HOOKS.md`. Falta ejecutar la matriz manual en la copia de pruebas.
 
 - Identificar Player 1 y Player 2 de forma fiable.
 - Detectar muerte, aparición del fantasma, reanimación exitosa y fallo de rescate.

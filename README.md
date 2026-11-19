@@ -15,15 +15,15 @@ Reglas completas en [`docs/REGLAS_DE_JUEGO.md`](docs/REGLAS_DE_JUEGO.md).
 ## Estado
 | Fase | Estado |
 |---|---|
-| M0 Investigación | De escritorio hecha ([informe](docs/INFORME_M0.md)); falta inspeccionar la instalación local |
+| M0 Investigación | Hecha y confirmada en Cuphead 1.3.4 x64 ([informe](docs/INFORME_M0.md)) |
 | Lógica de reglas, ruleta, equilibrio y agradecimiento | Implementada en `Coophead.Core` con pruebas unitarias |
-| M1 Plugin BepInEx mínimo | Compila y carga la configuración; **no probado en el juego** |
-| M2 Hooks del juego | Instrumentación de solo lectura lista; **falta verificarla en el juego** |
+| M1 Plugin BepInEx mínimo | **Carga en Cuphead 1.3.4** con BepInEx 5.4.23.5 |
+| M2 Hooks del juego | Los 9 hooks se instalan en 1.3.4; **falta comprobar en partida que se disparan bien** |
 | HUD y resumen de nivel | Listo; **no probado en el juego** |
 | Voz local | Experimental, desactivada por defecto; **no probada en un equipo real** |
 | Efectos de la ruleta y reinicio | Experimentales y desactivados por defecto; **no probados en el juego** |
 
-Nada se ha probado todavía dentro de Cuphead. No se debe asumir compatibilidad hasta verificar los hooks en la copia local (ver [`docs/GAME_HOOKS.md`](docs/GAME_HOOKS.md)).
+Hasta ahora solo se ha comprobado la carga en Cuphead 1.3.4, no el comportamiento en partida. No se debe asumir compatibilidad hasta verificar los hooks en la copia local (ver [`docs/GAME_HOOKS.md`](docs/GAME_HOOKS.md)).
 
 ## Estructura
 ```

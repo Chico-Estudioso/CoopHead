@@ -3,6 +3,9 @@
 Los cambios se documentan en español y se agrupan por versión.
 
 ## Sin publicar
+### Verificado
+- 19/11/2026: el plugin carga en Cuphead 1.3.4 (x64, Unity 2017.4.9f1, Mono CLR 2.0) con BepInEx 5.4.23.5 y resuelve 9 de 9 hooks. Falta verificar su comportamiento en partida.
+
 ### Añadido
 - Efectos en el juego experimentales (desactivados por defecto): controles invertidos con el mecanismo propio del juego, movimiento lento y dash limitado con restauración exacta del valor original. Los efectos no compatibles se quitan de la ruleta; si los efectos están desactivados, se simulan y el HUD lo indica.
 - Reinicio de nivel con `SceneLoader.ReloadLevel()`, diferido al siguiente frame y detrás de `ReinicioAutomatico`.
