@@ -9,6 +9,7 @@ Plugin de reglas personalizadas para el cooperativo local de dos jugadores de Cu
 - Ventana de agradecimiento de 3 s tras cada rescate: basta con decir «gracias» («Gracias, Cari», «Gracias, amor»…), por voz local o con una tecla de respaldo.
 - Ruleta de penalizaciones temporales de 4 s: movimiento lento, controles invertidos, disparo lento, dash limitado, castigo doble o sin penalización.
 - Director de equilibrio transparente que protege a quien acumula más presión.
+- Libro de recuerdos: estadísticas acumuladas por jefe (daño, parrys, gracias, castigos, el try final…) y una ventana dentro del juego (F11) para verlo todo y cambiar ajustes.
 
 Reglas completas en [`docs/REGLAS_DE_JUEGO.md`](docs/REGLAS_DE_JUEGO.md).
 

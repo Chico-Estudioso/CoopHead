@@ -27,6 +27,7 @@ namespace Coophead.Plugin
         private const string HudSection = "6 - HUD";
         private const string VoiceSection = "7 - Voz";
         private const string EffectsSection = "8 - Efectos";
+        private const string WindowSection = "9 - Ventana";
 
         private ConfigEntry<bool> modEnabled;
         private ConfigEntry<bool> diagnostics;
@@ -41,6 +42,11 @@ namespace Coophead.Plugin
         private readonly HudContext hudContext = new HudContext();
         private IList<string> summaryLines;
         private StatsStore statsStore;
+        private ConfigEntry<KeyboardShortcut> windowKey;
+        private ConfigEntry<float> windowScale;
+        private CoopheadWindow window;
+        private bool savedCursorVisible;
+        private CursorLockMode savedCursorLock;
         private StatsBook statsBook;
         private ConfigEntry<bool> voiceEnabled;
         private ConfigEntry<string> voiceCulture;
@@ -100,6 +106,7 @@ namespace Coophead.Plugin
                 session = new CoopheadSession(coreConfig, applier, log);
                 statsStore = new StatsStore(System.IO.Path.Combine(Paths.ConfigPath, "Coophead"), log);
                 statsBook = statsStore.Load();
+                window = new CoopheadWindow(Config);
                 SubscribeDiagnostics();
                 active = modEnabled.Value;
                 LogEnvironment();
@@ -135,6 +142,7 @@ namespace Coophead.Plugin
                 }
 
                 active = true;
+                UpdateWindow();
                 float now = Time.time;
                 if (thanksKeyP1.Value.IsDown())
                 {
@@ -219,6 +227,10 @@ namespace Coophead.Plugin
                 new ConfigDescription("Segundos que se ignora el escritorio al abrirse la ventana, para no confundir el sonido de reanimación del juego con un «gracias». Requiere reiniciar el juego.", new AcceptableValueRange<float>(0f, 2f)));
             voiceTestKey = Config.Bind(VoiceSection, "TeclaPruebaVoz", new KeyboardShortcut(KeyCode.F9),
                 "Escucha 5 s y escribe en el log lo que se ha reconocido, para probar el micrófono.");
+            windowKey = Config.Bind(WindowSection, "TeclaVentana", new KeyboardShortcut(KeyCode.F11),
+                "Abre y cierra la ventana de Coophead (libro de recuerdos, ruleta y ajustes). Se maneja con el ratón.");
+            windowScale = Config.Bind(WindowSection, "EscalaVentana", 1f,
+                new ConfigDescription("Tamaño de la ventana de Coophead.", new AcceptableValueRange<float>(0.6f, 2f)));
             thanksKeyP1 = Config.Bind(CoopheadSettings.ThanksSection, "TeclaGraciasP1", new KeyboardShortcut(KeyCode.F7),
                 "Tecla de respaldo para que P1 dé las gracias. Comprueba que no choca con tus controles ni con otros mods.");
             thanksKeyP2 = Config.Bind(CoopheadSettings.ThanksSection, "TeclaGraciasP2", new KeyboardShortcut(KeyCode.F8),
@@ -357,10 +369,68 @@ namespace Coophead.Plugin
                 + (applyRules.Value ? "APLICADAS" : "en modo solo registro") + ".");
         }
 
+        private void UpdateWindow()
+        {
+            if (windowKey.Value.IsDown())
+            {
+                window.Visible = !window.Visible;
+                if (window.Visible)
+                {
+                    savedCursorVisible = Cursor.visible;
+                    savedCursorLock = Cursor.lockState;
+                }
+                else
+                {
+                    RestoreCursor();
+                }
+            }
+
+            if (window.Visible)
+            {
+                // El juego puede ocultar el cursor en cada frame: mientras la ventana está abierta se mantiene visible.
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+            }
+        }
+
+        private void RestoreCursor()
+        {
+            Cursor.visible = savedCursorVisible;
+            Cursor.lockState = savedCursorLock;
+        }
+
         private void OnGUI()
         {
-            // Solo se dibuja en Repaint: evita construir el texto varias veces por frame.
-            if (failed || session == null || !modEnabled.Value || !showHud.Value || Event.current.type != EventType.Repaint)
+            if (failed || session == null || !modEnabled.Value)
+            {
+                return;
+            }
+
+            if (window != null && window.Visible)
+            {
+                try
+                {
+                    window.Draw(session, coreConfig, statsBook, statsStore.FilePath, windowScale.Value);
+                    if (!window.Visible)
+                    {
+                        RestoreCursor();
+                    }
+                }
+                catch (ExitGUIException)
+                {
+                    // Unity la usa para cortar el dibujo a propósito: no es un error.
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    window.Visible = false;
+                    RestoreCursor();
+                    log.Error("Error al dibujar la ventana; se cierra: " + e.Message);
+                }
+            }
+
+            // El HUD solo se dibuja en Repaint: evita construir el texto varias veces por frame.
+            if (!showHud.Value || Event.current.type != EventType.Repaint)
             {
                 return;
             }
