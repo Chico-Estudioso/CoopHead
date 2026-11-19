@@ -70,6 +70,9 @@ Esquema completo de ajustes en BepInEx (`docs/CONFIGURACION.md`), validado y pro
 - Resumen al terminar nivel.
 - Resultado: ajustes accesibles y comprensibles.
 
+## Estadísticas y libro de recuerdos 🟡
+Estadísticas por intento y libro acumulado por nivel, guardado entre partidas (`docs/ESTADISTICAS.md`). Faltan probar los hooks de combate en el juego.
+
 ## M7 — Integración y distribución ⬜
 - Pruebas de regresión, niveles diferentes y cambios de escena.
 - Empaquetado del plugin y documentación de instalación/desinstalación.

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using HarmonyLib;
 
 namespace Coophead.Plugin.GameIntegration
 {
@@ -11,7 +10,7 @@ namespace Coophead.Plugin.GameIntegration
     /// </summary>
     internal static class GameReflection
     {
-        private static readonly Dictionary<string, MemberInfo> Cache = new Dictionary<string, MemberInfo>();
+        private static readonly Dictionary<Type, Dictionary<string, MemberInfo>> Cache = new Dictionary<Type, Dictionary<string, MemberInfo>>();
 
         /// <summary>Lee un campo o propiedad (público o privado, también heredado). Null si no existe.</summary>
         public static object ReadMember(object instance, string name)
@@ -22,12 +21,18 @@ namespace Coophead.Plugin.GameIntegration
             }
 
             Type type = instance.GetType();
-            string key = type.FullName + "::" + name;
-            MemberInfo member;
-            if (!Cache.TryGetValue(key, out member))
+            Dictionary<string, MemberInfo> members;
+            if (!Cache.TryGetValue(type, out members))
             {
-                member = (MemberInfo)AccessTools.Field(type, name) ?? AccessTools.Property(type, name);
-                Cache[key] = member;
+                members = new Dictionary<string, MemberInfo>();
+                Cache[type] = members;
+            }
+
+            MemberInfo member;
+            if (!members.TryGetValue(name, out member))
+            {
+                member = Find(type, name);
+                members[name] = member;
             }
 
             var field = member as FieldInfo;
@@ -38,6 +43,28 @@ namespace Coophead.Plugin.GameIntegration
 
             var property = member as PropertyInfo;
             return property != null ? property.GetValue(instance, null) : null;
+        }
+
+        /// <summary>Campo o propiedad de instancia (público o privado) en el tipo o sus bases, sin avisos en el log.</summary>
+        private static MemberInfo Find(Type type, string name)
+        {
+            const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+            for (Type current = type; current != null; current = current.BaseType)
+            {
+                FieldInfo field = current.GetField(name, Flags);
+                if (field != null)
+                {
+                    return field;
+                }
+
+                PropertyInfo property = current.GetProperty(name, Flags);
+                if (property != null && property.GetIndexParameters().Length == 0 && property.CanRead)
+                {
+                    return property;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

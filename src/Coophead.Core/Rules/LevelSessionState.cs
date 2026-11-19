@@ -24,6 +24,12 @@ namespace Coophead.Core.Rules
 
         public bool IsActive { get; internal set; }
 
+        /// <summary>Momento de inicio según el reloj del juego; sirve para la duración del intento.</summary>
+        public float StartTime { get; internal set; }
+
+        /// <summary>Duración del intento al terminar; 0 si se desconoce.</summary>
+        public float DurationSeconds { get; internal set; }
+
         /// <summary>Reanimaciones totales del equipo en este intento, sin descontar créditos.</summary>
         public int TeamRevives { get; internal set; }
 

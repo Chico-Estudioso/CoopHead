@@ -56,9 +56,17 @@ namespace Coophead.Core.Integration
         /// <param name="levelInstanceId">Instancia del objeto de nivel; 0 si se desconoce.</param>
         public void LevelStarted(string levelKey, int levelInstanceId)
         {
+            LevelStarted(levelKey, levelInstanceId, 0f);
+        }
+
+        /// <param name="levelKey">Nombre del nivel (p. ej. el tipo de nivel del juego).</param>
+        /// <param name="levelInstanceId">Instancia del objeto de nivel; 0 si se desconoce.</param>
+        /// <param name="now">Reloj del juego, para medir la duración del intento.</param>
+        public void LevelStarted(string levelKey, int levelInstanceId, float now)
+        {
             Trace("Nivel iniciado: " + levelKey + " (instancia " + levelInstanceId + ")");
             currentLevelInstance = levelInstanceId;
-            session.StartLevel(levelKey);
+            session.StartLevel(levelKey, now);
         }
 
         /// <summary>
@@ -66,6 +74,15 @@ namespace Coophead.Core.Integration
         /// de que arranque el siguiente), se ignora para no cerrar el intento nuevo.
         /// </summary>
         public void LevelEnded(LevelEndReason reason, string source, int levelInstanceId)
+        {
+            LevelEnded(reason, source, levelInstanceId, float.NaN);
+        }
+
+        /// <param name="reason">Motivo según el hook.</param>
+        /// <param name="source">Hook que lo notifica, para el log.</param>
+        /// <param name="levelInstanceId">Instancia del objeto de nivel; 0 si se desconoce.</param>
+        /// <param name="now">Reloj del juego; NaN si se desconoce.</param>
+        public void LevelEnded(LevelEndReason reason, string source, int levelInstanceId, float now)
         {
             if (levelInstanceId != 0 && currentLevelInstance != 0 && levelInstanceId != currentLevelInstance)
             {
@@ -81,7 +98,7 @@ namespace Coophead.Core.Integration
             }
 
             Trace("Nivel terminado (" + reason + ") vía " + source);
-            session.EndLevel(reason);
+            session.EndLevel(reason, now);
         }
 
         /// <summary>Muerte notificada por el nivel. Solo diagnóstico: se compara con la aparición del fantasma.</summary>
@@ -140,6 +157,57 @@ namespace Coophead.Core.Integration
             }
 
             session.OnPlayerRevivedWithoutRescue(slot, slot.Label() + "@" + frame, now);
+        }
+
+        // --- Estadísticas de combate. El daño llega muy a menudo: no se escribe en el log. ---
+
+        public void Parry(int gamePlayerId)
+        {
+            Trace("Parry de " + Describe(gamePlayerId));
+            PlayerSlot slot;
+            if (ShouldApply() && TryMapPlayer(gamePlayerId, out slot))
+            {
+                session.RecordParry(slot);
+            }
+        }
+
+        public void Super(int gamePlayerId)
+        {
+            Trace("Súper de " + Describe(gamePlayerId));
+            PlayerSlot slot;
+            if (ShouldApply() && TryMapPlayer(gamePlayerId, out slot))
+            {
+                session.RecordSuper(slot);
+            }
+        }
+
+        public void Ex(int gamePlayerId)
+        {
+            Trace("EX de " + Describe(gamePlayerId));
+            PlayerSlot slot;
+            if (ShouldApply() && TryMapPlayer(gamePlayerId, out slot))
+            {
+                session.RecordEx(slot);
+            }
+        }
+
+        public void HitTaken(int gamePlayerId)
+        {
+            Trace("Golpe recibido por " + Describe(gamePlayerId));
+            PlayerSlot slot;
+            if (ShouldApply() && TryMapPlayer(gamePlayerId, out slot))
+            {
+                session.RecordHitTaken(slot);
+            }
+        }
+
+        public void DamageDealt(int gamePlayerId, float amount)
+        {
+            PlayerSlot slot;
+            if (ShouldApply() && TryMapPlayer(gamePlayerId, out slot))
+            {
+                session.RecordDamageDealt(slot, amount);
+            }
         }
 
         private bool ShouldApply()

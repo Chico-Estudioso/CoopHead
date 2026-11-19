@@ -10,6 +10,7 @@ namespace Coophead.Core.Rules
     public sealed class PlayerRoundStats
     {
         private List<float> penaltyTimes = new List<float>();
+        private int[] effectCounts = new int[4];
 
         public PlayerRoundStats(PlayerSlot slot)
         {
@@ -54,6 +55,40 @@ namespace Coophead.Core.Rules
         public int ThanksRecognized { get; internal set; }
 
         public int ThanksMissed { get; internal set; }
+
+        /// <summary>Agradecimientos reconocidos por voz (incluidos en <see cref="ThanksRecognized"/>).</summary>
+        public int ThanksByVoice { get; internal set; }
+
+        /// <summary>Agradecimientos confirmados con la tecla (incluidos en <see cref="ThanksRecognized"/>).</summary>
+        public int ThanksManual { get; internal set; }
+
+        // --- Estadísticas de combate (no afectan a las reglas) ---
+
+        /// <summary>Daño infligido a enemigos, en las unidades del juego.</summary>
+        public float DamageDealt { get; internal set; }
+
+        public int Parries { get; internal set; }
+
+        public int Supers { get; internal set; }
+
+        public int ExMoves { get; internal set; }
+
+        /// <summary>Golpes que le han quitado vida.</summary>
+        public int HitsTaken { get; internal set; }
+
+        /// <summary>Veces que la ruleta sacó «Castigo doble» para este jugador.</summary>
+        public int DoublePunishments { get; internal set; }
+
+        /// <summary>Veces que este jugador recibió cada efecto (los dobles cuentan sus dos efectos).</summary>
+        public int GetEffectCount(PenaltyEffect effect)
+        {
+            return effectCounts[(int)effect];
+        }
+
+        internal void AddEffect(PenaltyEffect effect)
+        {
+            effectCounts[(int)effect]++;
+        }
 
         public bool IsAlive { get; internal set; }
 
@@ -103,6 +138,7 @@ namespace Coophead.Core.Rules
         {
             var copy = (PlayerRoundStats)MemberwiseClone();
             copy.penaltyTimes = new List<float>(penaltyTimes);
+            copy.effectCounts = (int[])effectCounts.Clone();
             return copy;
         }
     }
