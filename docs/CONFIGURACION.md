@@ -4,13 +4,15 @@ BepInEx genera el archivo `BepInEx/config/com.coophead.rules.cfg` la primera vez
 
 Los valores fuera de rango se corrigen y se avisa en `BepInEx/LogOutput.log`.
 
+**Ojo**: BepInEx no cambia los valores que ya están en tu archivo. Si lo creaste con una versión anterior, `AplicarReglas`, `AplicarEfectos` y `ReinicioAutomatico` pueden seguir en `false`: cámbialos a mano.
+
 ## 1 - General
 | Clave | Por defecto | Descripción |
 |---|---|---|
 | `Activado` | `true` | Interruptor general. Al desactivarlo se restauran todos los efectos. |
 | `Diagnostico` | `true` | Registra en el log cada evento y decisión. Sin audio ni datos personales. |
 | `Hooks` | `true` | Instala los hooks de solo lectura. Requiere reiniciar el juego. |
-| `AplicarReglas` | `false` | Envía muertes y rescates a las reglas. Actívalo solo tras verificar los hooks (`docs/GAME_HOOKS.md`). |
+| `AplicarReglas` | `true` | Envía muertes y rescates a las reglas, el HUD y las estadísticas. Desactivado = solo log. |
 
 ## 2 - Reglas
 | Clave | Por defecto | Rango |
@@ -20,7 +22,7 @@ Los valores fuera de rango se corrigen y se avisa en `BepInEx/LogOutput.log`.
 | `LimiteReanimacionesEquipo` | `6` | 0–50 (0 = sin límite) |
 | `CreditosDeAyuda` | `true` | |
 | `CreditosMaximos` | `1` | 0–5 |
-| `ReinicioAutomatico` | `false` | Reinicia el nivel con `SceneLoader.ReloadLevel()` al alcanzar un límite. Actívalo solo tras probarlo (`docs/GAME_HOOKS.md`). Desactivado = solo aviso. |
+| `ReinicioAutomatico` | `true` | Reinicia el nivel con `SceneLoader.ReloadLevel()` al alcanzar un límite. Desactivado = solo aviso en el HUD y en el log. |
 
 ## 3 - Ruleta
 | Clave | Por defecto | Rango |
@@ -78,7 +80,7 @@ Agradecimiento: voz no disponible · tecla activa
 ## 8 - Efectos (experimental)
 | Clave | Por defecto | Descripción |
 |---|---|---|
-| `AplicarEfectos` | `false` | Aplica de verdad los efectos. Desactivado = simulados (se ven en el HUD con «(simulado)»). Al activarlo, los efectos no compatibles con tu versión se quitan de la ruleta. |
+| `AplicarEfectos` | `true` | Aplica de verdad los castigos. Desactivado = simulados (se ven en el HUD con «(simulado)»). Los efectos no compatibles con tu versión se quitan de la ruleta. |
 | `FactorMovimientoLento` | `0.6` | 0,2–1. Velocidad durante «Movimiento lento». |
 | `FactorDash` | `0.5` | 0,2–1. Duración del dash durante «Dash limitado». |
 
@@ -90,7 +92,10 @@ Agradecimiento: voz no disponible · tecla activa
 | `VozActivada` | `false` | Reconocimiento local con el reconocedor de Windows. Requiere reiniciar el juego. |
 | `Idioma` | `es-ES` | Debe estar instalado con «Reconocimiento de voz» en Windows. |
 | `ConfianzaMinima` | `0.6` | 0,1–1. Súbela si hay falsos positivos; bájala si no te reconoce. |
-| `TeclaPruebaVoz` | `F9` | Escucha 5 s y escribe en el log lo reconocido. |
+| `FuenteVoz` | `Ambos` | `Microfono`, `Escritorio` (lo que suena en el PC, p. ej. Parsec) o `Ambos`. Requiere reiniciar el juego. |
+| `ConfianzaMinimaEscritorio` | `0.6` | 0,1–1. Para lo oído por el escritorio, donde también suena el juego. |
+| `RetrasoEscritorio` | `0.8` s | 0–2. Tiempo inicial de la ventana en que se ignora el escritorio (sonido de reanimación del juego). |
+| `TeclaPruebaVoz` | `F9` | Escucha 5 s y escribe en el log lo reconocido y por qué fuente. |
 
 Privacidad y limitaciones en `docs/VOZ_Y_PRIVACIDAD.md`.
 

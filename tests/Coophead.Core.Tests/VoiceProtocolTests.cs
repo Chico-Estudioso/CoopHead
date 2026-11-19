@@ -20,6 +20,27 @@ namespace Coophead.Core.Tests
         }
 
         [Theory]
+        [InlineData("escritorio", "gracias cari")]
+        [InlineData("mic", "gracias")]
+        public void HeardConFuente(string source, string text)
+        {
+            VoiceMessage message = VoiceProtocol.Parse(VoiceProtocol.FormatHeard(0.7f, text, source));
+
+            Assert.Equal(VoiceMessageKind.Heard, message.Kind);
+            Assert.Equal(source, message.Source);
+            Assert.Equal(text, message.Text);
+        }
+
+        [Fact]
+        public void HeardSinFuenteSigueFuncionando()
+        {
+            VoiceMessage message = VoiceProtocol.Parse("HEARD 0.70 gracias micro");
+
+            Assert.Equal("gracias micro", message.Text);
+            Assert.Equal(string.Empty, message.Source);
+        }
+
+        [Theory]
         [InlineData("READY es-ES Microsoft Speech Recognizer", VoiceMessageKind.Ready, "es-ES Microsoft Speech Recognizer")]
         [InlineData("UNAVAILABLE no hay micrófono", VoiceMessageKind.Unavailable, "no hay micrófono")]
         [InlineData("LISTENING", VoiceMessageKind.Listening, "")]

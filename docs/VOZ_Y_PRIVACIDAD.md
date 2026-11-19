@@ -27,17 +27,24 @@ No incluir modelos grandes dentro del repositorio. El modelo se instalará local
 - **Por qué un proceso aparte**: el plugin corre en el Mono de Unity con perfil .NET 3.5 y no puede cargar `System.Speech` de forma fiable. El ayudante solo acepta órdenes fijas (`LISTEN`, `STOP`, `TEST n`, `QUIT`) por su entrada estándar y devuelve texto reconocido por su salida estándar (`VoiceProtocol`). Se cierra si el juego se cierra.
 - **Alternativa descartada por ahora**: Vosk (Apache 2.0) exige descargar un modelo de decenas de MB y dependencias nativas; queda como opción si el reconocedor de Windows no da buen resultado en español.
 
+### Fuentes de audio (`FuenteVoz`)
+- **Microfono**: el micrófono predeterminado de Windows.
+- **Escritorio**: lo que suena por la salida de audio predeterminada del PC (WASAPI en bucle, con NAudio). Sirve para jugar por **Parsec**: la voz de tu pareja llega al PC anfitrión por los altavoces o cascos y se reconoce ahí.
+- **Ambos** (por defecto): un reconocedor por fuente. Si la misma frase llega por las dos en menos de 1 s (por ejemplo, la voz de los altavoces entra también por el micrófono), cuenta una sola vez.
+
+La fuente del escritorio también oye el juego: por eso tiene su propia `ConfianzaMinimaEscritorio` (0,6) y se ignora durante los primeros `RetrasoEscritorio` segundos (0,8 s), cuando suena el efecto de reanimación del juego. Con la latencia de Parsec puede convenir subir `VentanaSegundos` a 4.
+
 ### Garantías de privacidad
-- Solo escucha entre la apertura y el cierre de una ventana de agradecimiento, o durante la prueba de micrófono (F9, 5 s).
+- Solo escucha entre la apertura y el cierre de una ventana de agradecimiento, o durante la prueba de micrófono (F9, 5 s). Esto vale para las dos fuentes: el audio del escritorio tampoco se captura fuera de esos momentos.
 - No guarda audio ni transcripciones; el texto reconocido se usa en memoria y se descarta. Solo se escribe en el log durante la prueba o con `Diagnostico` activado.
 - No usa red.
 - Si el reconocedor o el micrófono fallan, la voz se marca como no disponible y **nadie es castigado** por ello.
 
 ### Limitaciones conocidas
-- Usa el **micrófono predeterminado de Windows**: `System.Speech` no permite elegir otro dispositivo. Para cambiarlo, cambia el predeterminado en Windows.
+- Usa el **micrófono predeterminado** y la **salida de audio predeterminada** de Windows; para cambiar de dispositivo, cambia el predeterminado en Windows.
 - Con un solo micrófono no se distingue quién habla.
 - No hay medidas de precisión todavía: hay que probar con el ruido real del juego y ajustar `ConfianzaMinima`.
-- No probado en un equipo real: el ayudante compila, pero no se ha ejecutado.
+- Micrófono: probado por el usuario el 19/11/2026 (funciona). Escritorio: no probado todavía.
 
 ## Frase reconocida (implementado en Coophead.Core)
 - Vale para los dos jugadores (ADR-004). Por defecto basta con «gracias»; los apelativos `cari`, `kari` y `amor` se añaden a la gramática y pueden exigirse con `RequireName`.

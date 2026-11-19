@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Speech.Recognition;
 using System.Text;
@@ -15,16 +16,22 @@ namespace Coophead.Voice
     /// <para>Usa el reconocedor de voz de escritorio de Windows (System.Speech/SAPI) con una gramática cerrada que
     /// solo contiene las frases de agradecimiento. Ese reconocedor emplea modelos acústicos estadísticos: es
     /// reconocimiento automático del habla (aprendizaje automático clásico), no IA generativa, y funciona sin conexión.</para>
+    /// <para>Fuentes de audio: el micrófono predeterminado y/o lo que suena en el escritorio (por ejemplo, la voz de la
+    /// pareja que llega por Parsec). Cada fuente tiene su propio reconocedor.</para>
     /// <para>Solo escucha entre una orden LISTEN y una STOP (o durante una prueba). No guarda audio ni transcripciones:
     /// el texto reconocido se escribe en la salida estándar para el plugin y se descarta.</para>
-    /// <para>Uso: Coophead.Voice.exe --culture es-ES --phrases "gracias|gracias cari" --min-confidence 0.6</para>
+    /// <para>Uso: Coophead.Voice.exe --culture es-ES --phrases "gracias|gracias cari" --sources mic,escritorio
+    /// --min-confidence 0.6 --desktop-min-confidence 0.6 --desktop-delay-ms 800</para>
     /// </remarks>
     internal static class Program
     {
+        /// <summary>Una misma frase oída por el micrófono y por los altavoces solo cuenta una vez.</summary>
+        private const long DuplicateWindowMilliseconds = 1000;
+
         private static readonly object Gate = new object();
-        private static SpeechRecognitionEngine engine;
-        private static bool running;
-        private static bool restartRequested;
+        private static readonly Stopwatch Clock = Stopwatch.StartNew();
+        private static readonly List<RecognitionChannel> Channels = new List<RecognitionChannel>();
+        private static long lastHeardAt = -DuplicateWindowMilliseconds;
         private static Timer testTimer;
 
         private static int Main(string[] args)
@@ -34,19 +41,32 @@ namespace Coophead.Voice
 
             string culture = "es-ES";
             IList<string> phrases = new List<string>();
+            string sources = VoiceProtocol.SourceMicrophone;
             float minConfidence = 0.6f;
+            float desktopMinConfidence = 0.6f;
+            int desktopDelayMs = 800;
             for (int i = 0; i + 1 < args.Length; i += 2)
             {
+                string value = args[i + 1];
                 switch (args[i])
                 {
                     case "--culture":
-                        culture = args[i + 1];
+                        culture = value;
                         break;
                     case "--phrases":
-                        phrases = VoiceProtocol.SplitPhrases(args[i + 1]);
+                        phrases = VoiceProtocol.SplitPhrases(value);
+                        break;
+                    case "--sources":
+                        sources = value;
                         break;
                     case "--min-confidence":
-                        float.TryParse(args[i + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out minConfidence);
+                        float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out minConfidence);
+                        break;
+                    case "--desktop-min-confidence":
+                        float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out desktopMinConfidence);
+                        break;
+                    case "--desktop-delay-ms":
+                        int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out desktopDelayMs);
                         break;
                 }
             }
@@ -65,44 +85,112 @@ namespace Coophead.Voice
                 return 3;
             }
 
+            bool wantMic = sources.IndexOf(VoiceProtocol.SourceMicrophone, StringComparison.OrdinalIgnoreCase) >= 0;
+            bool wantDesktop = sources.IndexOf(VoiceProtocol.SourceDesktop, StringComparison.OrdinalIgnoreCase) >= 0;
+            var problems = new List<string>();
+            var active = new List<string>();
+
             try
             {
-                using (engine = new SpeechRecognitionEngine(recognizer))
+                if (wantMic)
                 {
-                    var builder = new GrammarBuilder(new Choices(ToArray(phrases))) { Culture = recognizer.Culture };
-                    engine.LoadGrammar(new Grammar(builder) { Name = "coophead-gracias" });
+                    TryAddChannel(VoiceProtocol.SourceMicrophone, recognizer, phrases, minConfidence, null, problems, active,
+                        "micrófono predeterminado");
+                }
 
+                if (wantDesktop)
+                {
+                    string device;
                     try
                     {
-                        engine.SetInputToDefaultAudioDevice();
+                        device = "escritorio (" + LoopbackSource.DescribeDevice() + ")";
                     }
-                    catch (InvalidOperationException)
+                    catch (Exception e)
                     {
-                        Write(VoiceProtocol.FormatUnavailable("No hay micrófono predeterminado en Windows o no se puede abrir."));
-                        return 4;
+                        device = null;
+                        problems.Add("No se puede capturar el audio del escritorio: " + e.Message);
                     }
 
-                    engine.SpeechRecognized += (sender, e) =>
+                    if (device != null)
                     {
-                        if (e.Result != null && e.Result.Confidence >= minConfidence)
-                        {
-                            Write(VoiceProtocol.FormatHeard(e.Result.Confidence, e.Result.Text));
-                        }
-                    };
-                    engine.RecognizeCompleted += OnRecognizeCompleted;
-
-                    Write(VoiceProtocol.FormatReady(recognizer.Culture.Name + " " + recognizer.Name));
-                    CommandLoop();
-                    StopListening();
+                        TryAddChannel(VoiceProtocol.SourceDesktop, recognizer, phrases, desktopMinConfidence,
+                            new LoopbackSource(desktopDelayMs), problems, active, device);
+                    }
                 }
+
+                foreach (string problem in problems)
+                {
+                    Write(VoiceProtocol.FormatError(problem));
+                }
+
+                if (Channels.Count == 0)
+                {
+                    Write(VoiceProtocol.FormatUnavailable("Ninguna fuente de audio disponible. " + string.Join(" ", problems.ToArray())));
+                    return 4;
+                }
+
+                Write(VoiceProtocol.FormatReady(recognizer.Culture.Name + " " + recognizer.Name + " · " + string.Join(" + ", active.ToArray())));
+                CommandLoop();
             }
             catch (Exception e)
             {
                 Write(VoiceProtocol.FormatUnavailable("Error del reconocedor: " + e.Message));
                 return 5;
             }
+            finally
+            {
+                foreach (RecognitionChannel channel in Channels)
+                {
+                    channel.Dispose();
+                }
+            }
 
             return 0;
+        }
+
+        private static void TryAddChannel(
+            string source,
+            RecognizerInfo recognizer,
+            IList<string> phrases,
+            float minConfidence,
+            LoopbackSource loopback,
+            List<string> problems,
+            List<string> active,
+            string description)
+        {
+            try
+            {
+                var builder = new GrammarBuilder(new Choices(ToArray(phrases))) { Culture = recognizer.Culture };
+                var channel = new RecognitionChannel(source, recognizer, new Grammar(builder) { Name = "coophead-gracias-" + source }, minConfidence, loopback);
+                channel.Recognized += OnRecognized;
+                channel.Failed += (c, message) => Write(VoiceProtocol.FormatError(c.Source + ": " + message));
+                Channels.Add(channel);
+                active.Add(description);
+            }
+            catch (InvalidOperationException)
+            {
+                problems.Add("No hay micrófono predeterminado en Windows o no se puede abrir.");
+            }
+            catch (Exception e)
+            {
+                problems.Add("No se pudo preparar la fuente " + source + ": " + e.Message);
+            }
+        }
+
+        private static void OnRecognized(RecognitionChannel channel, string text, float confidence)
+        {
+            lock (Gate)
+            {
+                long now = Clock.ElapsedMilliseconds;
+                if (now - lastHeardAt < DuplicateWindowMilliseconds)
+                {
+                    return;
+                }
+
+                lastHeardAt = now;
+            }
+
+            Write(VoiceProtocol.FormatHeard(confidence, text, channel.Source));
         }
 
         /// <summary>Lee órdenes hasta QUIT o hasta que el plugin cierre la entrada (el juego se ha cerrado).</summary>
@@ -120,25 +208,25 @@ namespace Coophead.Voice
                 if (line == VoiceProtocol.Listen)
                 {
                     CancelTest();
-                    StartListening();
+                    StartAll();
                     continue;
                 }
 
                 if (line == VoiceProtocol.Stop)
                 {
                     CancelTest();
-                    StopListening();
+                    StopAll();
                     continue;
                 }
 
                 float? testSeconds = VoiceProtocol.ParseTest(line);
                 if (testSeconds.HasValue)
                 {
-                    StartListening();
                     CancelTest();
+                    StartAll();
                     testTimer = new Timer(_ =>
                     {
-                        StopListening();
+                        StopAll();
                         Write(VoiceProtocol.TestEnd);
                     }, null, (int)(testSeconds.Value * 1000f), Timeout.Infinite);
                     continue;
@@ -148,54 +236,35 @@ namespace Coophead.Voice
             }
         }
 
-        private static void StartListening()
+        private static void StartAll()
         {
-            lock (Gate)
+            foreach (RecognitionChannel channel in Channels)
             {
-                if (running)
+                try
                 {
-                    restartRequested = true;
-                    return;
+                    channel.Start();
                 }
-
-                engine.RecognizeAsync(RecognizeMode.Multiple);
-                running = true;
-                restartRequested = false;
+                catch (Exception e)
+                {
+                    Write(VoiceProtocol.FormatError(channel.Source + ": " + e.Message));
+                }
             }
 
             Write(VoiceProtocol.Listening);
         }
 
-        private static void StopListening()
+        private static void StopAll()
         {
-            lock (Gate)
+            foreach (RecognitionChannel channel in Channels)
             {
-                restartRequested = false;
-                if (running)
+                try
                 {
-                    engine.RecognizeAsyncCancel();
+                    channel.Stop();
                 }
-            }
-        }
-
-        private static void OnRecognizeCompleted(object sender, RecognizeCompletedEventArgs e)
-        {
-            bool restart;
-            lock (Gate)
-            {
-                running = false;
-                restart = restartRequested;
-            }
-
-            if (e.Error != null)
-            {
-                Write(VoiceProtocol.FormatError(e.Error.Message));
-            }
-
-            if (restart)
-            {
-                StartListening();
-                return;
+                catch (Exception e)
+                {
+                    Write(VoiceProtocol.FormatError(channel.Source + ": " + e.Message));
+                }
             }
 
             Write(VoiceProtocol.Stopped);

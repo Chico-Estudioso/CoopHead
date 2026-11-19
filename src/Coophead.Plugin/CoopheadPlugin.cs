@@ -42,6 +42,9 @@ namespace Coophead.Plugin
         private ConfigEntry<bool> voiceEnabled;
         private ConfigEntry<string> voiceCulture;
         private ConfigEntry<float> voiceMinConfidence;
+        private ConfigEntry<VoiceSourceMode> voiceSources;
+        private ConfigEntry<float> voiceDesktopMinConfidence;
+        private ConfigEntry<float> voiceDesktopDelay;
         private ConfigEntry<KeyboardShortcut> voiceTestKey;
         private VoiceService voice;
         private ConfigEntry<bool> applyEffects;
@@ -176,8 +179,8 @@ namespace Coophead.Plugin
                 "Escribe en el log de BepInEx cada evento y decisión del mod. No registra audio ni datos personales.");
             installHooks = Config.Bind(GeneralSection, "Hooks", true,
                 "Instala los hooks de solo lectura que registran inicio y fin de nivel, muertes y rescates (requiere reiniciar el juego). Si un hook no existe en tu versión, se desactiva solo.");
-            applyRules = Config.Bind(GeneralSection, "AplicarReglas", false,
-                "Envía las muertes y rescates detectados a las reglas (contadores, agradecimiento y ruleta). Actívalo solo cuando hayas comprobado en el log que los eventos son correctos (docs/GAME_HOOKS.md).");
+            applyRules = Config.Bind(GeneralSection, "AplicarReglas", true,
+                "Envía las muertes y rescates detectados a las reglas (contadores, agradecimiento, ruleta y estadísticas). Si se desactiva, solo se registran en el log.");
             showHud = Config.Bind(HudSection, "MostrarHUD", true,
                 "Muestra contadores, créditos, ventana de agradecimiento y efectos activos durante los niveles.");
             hudCorner = Config.Bind(HudSection, "Esquina", HudCorner.SuperiorDerecha,
@@ -186,8 +189,8 @@ namespace Coophead.Plugin
                 new ConfigDescription("Tamaño del texto del HUD.", new AcceptableValueRange<int>(8, 32)));
             summarySeconds = Config.Bind(HudSection, "SegundosResumen", 8f,
                 new ConfigDescription("Segundos que se muestra el resumen al terminar un nivel. 0 = no mostrarlo.", new AcceptableValueRange<float>(0f, 30f)));
-            applyEffects = Config.Bind(EffectsSection, "AplicarEfectos", false,
-                "Experimental. Aplica de verdad los efectos de la ruleta al juego. Si está desactivado, se simulan: se cuentan y se ven en el HUD, pero no cambian nada. Los efectos no compatibles con tu versión se quitan de la ruleta al activarlo.");
+            applyEffects = Config.Bind(EffectsSection, "AplicarEfectos", true,
+                "Aplica de verdad los castigos de la ruleta al juego. Si está desactivado, se simulan: se cuentan y se ven en el HUD con «(simulado)», pero no cambian nada. Los efectos no compatibles con tu versión se quitan de la ruleta.");
             slowMovementFactor = Config.Bind(EffectsSection, "FactorMovimientoLento", 0.6f,
                 new ConfigDescription("Velocidad de movimiento durante «Movimiento lento» (0,6 = 60 %).", new AcceptableValueRange<float>(0.2f, 1f)));
             dashFactor = Config.Bind(EffectsSection, "FactorDash", 0.5f,
@@ -198,6 +201,12 @@ namespace Coophead.Plugin
                 "Idioma del reconocedor de Windows. Debe estar instalado con «Reconocimiento de voz».");
             voiceMinConfidence = Config.Bind(VoiceSection, "ConfianzaMinima", 0.6f,
                 new ConfigDescription("Confianza mínima del reconocedor para aceptar la frase. Súbela si hay falsos positivos.", new AcceptableValueRange<float>(0.1f, 1f)));
+            voiceSources = Config.Bind(VoiceSection, "FuenteVoz", VoiceSourceMode.Ambos,
+                "De dónde se escucha el «gracias»: Microfono (tu micrófono predeterminado), Escritorio (lo que suena en el PC, p. ej. la voz de tu pareja por Parsec) o Ambos. Requiere reiniciar el juego.");
+            voiceDesktopMinConfidence = Config.Bind(VoiceSection, "ConfianzaMinimaEscritorio", 0.6f,
+                new ConfigDescription("Confianza mínima para frases oídas por el escritorio. Más alta que la del micrófono porque ahí también suena el juego.", new AcceptableValueRange<float>(0.1f, 1f)));
+            voiceDesktopDelay = Config.Bind(VoiceSection, "RetrasoEscritorio", 0.8f,
+                new ConfigDescription("Segundos que se ignora el escritorio al abrirse la ventana, para no confundir el sonido de reanimación del juego con un «gracias». Requiere reiniciar el juego.", new AcceptableValueRange<float>(0f, 2f)));
             voiceTestKey = Config.Bind(VoiceSection, "TeclaPruebaVoz", new KeyboardShortcut(KeyCode.F9),
                 "Escucha 5 s y escribe en el log lo que se ha reconocido, para probar el micrófono.");
             thanksKeyP1 = Config.Bind(CoopheadSettings.ThanksSection, "TeclaGraciasP1", new KeyboardShortcut(KeyCode.F7),
@@ -223,7 +232,16 @@ namespace Coophead.Plugin
             voice = new VoiceService(log);
             string helper = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Info.Location), "Coophead.Voice.exe");
             IList<string> phrases = new ThanksPhraseMatcher(coreConfig.Thanks).BuildSpokenGrammar();
-            if (!voice.Start(helper, voiceCulture.Value, phrases, voiceMinConfidence.Value))
+            var options = new VoiceService.Options
+            {
+                Culture = voiceCulture.Value,
+                Phrases = phrases,
+                Sources = voiceSources.Value,
+                MinConfidence = voiceMinConfidence.Value,
+                DesktopMinConfidence = voiceDesktopMinConfidence.Value,
+                DesktopDelaySeconds = voiceDesktopDelay.Value,
+            };
+            if (!voice.Start(helper, options))
             {
                 voice = null;
                 return;
@@ -269,7 +287,8 @@ namespace Coophead.Plugin
                     case VoiceMessageKind.Heard:
                         if (voiceTesting || DiagnosticsEnabled)
                         {
-                            log.Info("Voz: reconocido «" + message.Text + "» (confianza " + message.Confidence.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + ").");
+                            log.Info("Voz: reconocido «" + message.Text + "» por " + (string.IsNullOrEmpty(message.Source) ? "voz" : message.Source)
+                                + " (confianza " + message.Confidence.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + ").");
                         }
 
                         session.OnTranscript(message.Text, now);

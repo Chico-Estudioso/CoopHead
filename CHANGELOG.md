@@ -3,6 +3,14 @@
 Los cambios se documentan en español y se agrupan por versión.
 
 ## Sin publicar
+### Añadido (19/11/2026)
+- Voz desde el escritorio para jugar por Parsec: `FuenteVoz` = `Microfono`, `Escritorio` o `Ambos` (por defecto). Captura WASAPI en bucle con NAudio, solo durante las ventanas, con confianza propia, retraso inicial para ignorar el sonido de reanimación del juego y deduplicación entre fuentes.
+- El HUD avisa del límite alcanzado también con el reinicio automático desactivado, y muestra el total de reanimaciones cuando los créditos reducen el contador neto.
+- El log indica cada castigo aplicado de verdad.
+
+### Cambiado (19/11/2026)
+- `AplicarReglas`, `AplicarEfectos` y `ReinicioAutomatico` pasan a estar activados por defecto tras comprobar el plugin en Cuphead 1.3.4.
+
 ### Verificado
 - 19/11/2026: el plugin carga en Cuphead 1.3.4 (x64, Unity 2017.4.9f1, Mono CLR 2.0) con BepInEx 5.4.23.5 y resuelve 9 de 9 hooks. Falta verificar su comportamiento en partida.
 

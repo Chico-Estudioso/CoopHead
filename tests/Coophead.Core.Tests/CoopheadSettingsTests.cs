@@ -60,7 +60,7 @@ namespace Coophead.Core.Tests
         }
 
         [Fact]
-        public void LosValoresPorDefectoCoincidenConElCoreSalvoElReinicio()
+        public void LosValoresPorDefectoCoincidenConElCore()
         {
             var binder = new FakeBinder();
             IList<string> warnings;
@@ -69,7 +69,7 @@ namespace Coophead.Core.Tests
             var reference = new CoopheadConfig();
 
             Assert.Empty(warnings);
-            Assert.False(config.Rules.AutoRestartEnabled);
+            Assert.True(config.Rules.AutoRestartEnabled);
             Assert.Equal(reference.Rules.PlayerOneReviveLimit, config.Rules.PlayerOneReviveLimit);
             Assert.Equal(reference.Rules.TeamReviveLimit, config.Rules.TeamReviveLimit);
             Assert.Equal(reference.Roulette.DefaultDurationSeconds, config.Roulette.DefaultDurationSeconds);

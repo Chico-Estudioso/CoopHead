@@ -10,8 +10,7 @@ namespace Coophead.Core.Configuration
     /// Lee los valores del sistema de configuración y los vuelca en un <see cref="CoopheadConfig"/> validado.
     /// </summary>
     /// <remarks>
-    /// Los valores por defecto salen de <see cref="CoopheadConfig"/>, con una excepción deliberada:
-    /// el reinicio automático empieza desactivado hasta que se verifique el hook de reinicio en el juego.
+    /// Los valores por defecto salen de <see cref="CoopheadConfig"/>.
     /// </remarks>
     public sealed class CoopheadSettings
     {
@@ -111,8 +110,8 @@ namespace Coophead.Core.Configuration
                 "Rescatar a tu pareja resta una reanimación recibida propia o guarda un crédito.");
             var maxCredits = binder.BindRange(RulesSection, "CreditosMaximos", d.Rules.MaxStoredCredits, 0, 5,
                 "Créditos de ayuda que se pueden guardar a la vez.");
-            var autoRestart = binder.Bind(RulesSection, "ReinicioAutomatico", false,
-                "Reinicia el nivel al alcanzar un límite. Desactivado hasta verificar el hook de reinicio en tu versión del juego; si está desactivado, solo se avisa.");
+            var autoRestart = binder.Bind(RulesSection, "ReinicioAutomatico", d.Rules.AutoRestartEnabled,
+                "Reinicia el nivel al alcanzar un límite (individual o de equipo). Si está desactivado, solo se avisa en el HUD y en el log.");
 
             appliers.Add(c =>
             {

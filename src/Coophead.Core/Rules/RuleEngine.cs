@@ -131,6 +131,11 @@ namespace Coophead.Core.Rules
             result.LimitReached = EvaluateLimits(rescuedStats);
             if (result.LimitReached != RestartReason.None)
             {
+                if (Session.LimitReached == RestartReason.None)
+                {
+                    Session.LimitReached = result.LimitReached;
+                }
+
                 if (config.AutoRestartEnabled)
                 {
                     Session.RestartPending = true;

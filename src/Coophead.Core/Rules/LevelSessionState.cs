@@ -32,6 +32,9 @@ namespace Coophead.Core.Rules
 
         public RestartReason RestartReason { get; internal set; }
 
+        /// <summary>Primer límite alcanzado en el intento, se haya pedido reinicio o no (reinicio automático desactivado).</summary>
+        public RestartReason LimitReached { get; internal set; }
+
         public PlayerRoundStats Get(PlayerSlot slot)
         {
             return players[(int)slot];

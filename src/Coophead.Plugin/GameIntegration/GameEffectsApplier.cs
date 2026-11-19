@@ -113,12 +113,15 @@ namespace Coophead.Plugin.GameIntegration
                     object stats = GameReflection.ReadMember(controller, "stats");
                     // Caducidad propia del juego como red de seguridad: aunque no se restaurase, acaba sola.
                     reverseTimeSetter.Invoke(stats, new object[] { durationSeconds + 0.1f });
+                    log.Info("Castigo aplicado a " + player.Label() + ": controles invertidos durante " + durationSeconds.ToString("0.0") + " s.");
                     break;
                 case PenaltyEffect.SlowMovement:
                     ScaleMotorProperty(player, controller, "moveSpeed", slowMovementFactor());
+                    log.Info("Castigo aplicado a " + player.Label() + ": movimiento lento durante " + durationSeconds.ToString("0.0") + " s.");
                     break;
                 case PenaltyEffect.LimitedDash:
                     ScaleMotorProperty(player, controller, "dashTime", dashFactor());
+                    log.Info("Castigo aplicado a " + player.Label() + ": dash limitado durante " + durationSeconds.ToString("0.0") + " s.");
                     break;
             }
         }
