@@ -4,6 +4,7 @@ Los cambios se documentan en español y se agrupan por versión.
 
 ## Sin publicar
 ### Añadido (19/11/2026)
+- Ventana de Coophead dentro del juego (F11, con ratón): partida en directo, libro de recuerdos con el try final y comparativa P1/P2, totales, ruleta editable con probabilidades actuales, ajustes principales y registro.
 - Estadísticas acumulativas: daño infligido, parrys, súper, EX, golpes recibidos, gracias por voz y con tecla, castigos por efecto y castigos dobles, además de las reglas. Libro de recuerdos por nivel en `BepInEx/config/Coophead/estadisticas.json` con intentos, victorias, mejor tiempo, totales y el último intento ganado (`docs/ESTADISTICAS.md`).
 - El resumen de fin de nivel incluye daño, parrys y duración.
 - Voz desde el escritorio para jugar por Parsec: `FuenteVoz` = `Microfono`, `Escritorio` o `Ambos` (por defecto). Captura WASAPI en bucle con NAudio, solo durante las ventanas, con confianza propia, retraso inicial para ignorar el sonido de reanimación del juego y deduplicación entre fuentes.

@@ -16,16 +16,19 @@ namespace Coophead.Plugin
         public void Info(string message)
         {
             source.LogInfo(message);
+            RecentLog.Add("·", message);
         }
 
         public void Warning(string message)
         {
             source.LogWarning(message);
+            RecentLog.Add("!", message);
         }
 
         public void Error(string message)
         {
             source.LogError(message);
+            RecentLog.Add("×", message);
         }
     }
 }
