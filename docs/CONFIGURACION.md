@@ -6,8 +6,8 @@ Los valores fuera de rango se corrigen y se avisa en `BepInEx/LogOutput.log`.
 
 **Ojo**: BepInEx no cambia los valores que ya están en tu archivo. Si lo creaste con una versión anterior, `AplicarReglas`, `AplicarEfectos` y `ReinicioAutomatico` pueden seguir en `false`: cámbialos a mano.
 
-## Ventana de Coophead (F11)
-Pulsa **F11** dentro del juego para abrir o cerrar la ventana, que se maneja con el ratón. Mejor con el juego en pausa o en el mapa. Pestañas:
+## Ventana de Coophead (F6)
+Pulsa **F6** dentro del juego para abrir o cerrar la ventana, que se maneja con el ratón. Mejor con el juego en pausa o en el mapa. Pestañas:
 
 - **Partida**: el intento en curso en directo (daño, parrys, muertes, gracias, castigos…), ventanas de agradecimiento abiertas y castigos activos.
 - **Recuerdos**: el libro de recuerdos. Elige un nivel a la izquierda y verás intentos, victorias, tiempos y la comparativa P1/P2 de los totales, del **try final** (última victoria) o del último intento. En dorado, quién lleva más.
@@ -21,7 +21,7 @@ El HUD de la esquina sigue funcionando igual durante la partida. Para editar tod
 ## 9 - Ventana
 | Clave | Por defecto | Descripción |
 |---|---|---|
-| `TeclaVentana` | `F11` | Abre y cierra la ventana. |
+| `TeclaVentana` | `F6` | Abre y cierra la ventana. Antes era F11; se cambió para no confundirla con la pantalla completa de otros programas. Si tu archivo ya tiene F11 guardado, cámbialo aquí. |
 | `EscalaVentana` | `1` | 0,6–2. Tamaño de la ventana (se ajusta además a la resolución). |
 
 ## 1 - General

@@ -227,7 +227,7 @@ namespace Coophead.Plugin
                 new ConfigDescription("Segundos que se ignora el escritorio al abrirse la ventana, para no confundir el sonido de reanimación del juego con un «gracias». Requiere reiniciar el juego.", new AcceptableValueRange<float>(0f, 2f)));
             voiceTestKey = Config.Bind(VoiceSection, "TeclaPruebaVoz", new KeyboardShortcut(KeyCode.F9),
                 "Escucha 5 s y escribe en el log lo que se ha reconocido, para probar el micrófono.");
-            windowKey = Config.Bind(WindowSection, "TeclaVentana", new KeyboardShortcut(KeyCode.F11),
+            windowKey = Config.Bind(WindowSection, "TeclaVentana", new KeyboardShortcut(KeyCode.F6),
                 "Abre y cierra la ventana de Coophead (libro de recuerdos, ruleta y ajustes). Se maneja con el ratón.");
             windowScale = Config.Bind(WindowSection, "EscalaVentana", 1f,
                 new ConfigDescription("Tamaño de la ventana de Coophead.", new AcceptableValueRange<float>(0.6f, 2f)));
