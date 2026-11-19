@@ -13,8 +13,31 @@ namespace Coophead.Plugin
     /// Gestiona el ayudante de voz local (Coophead.Voice.exe). Las líneas llegan en un hilo secundario y se
     /// encolan; el plugin las procesa en el hilo principal con <see cref="Drain"/>.
     /// </summary>
+    /// <summary>Fuentes de audio para reconocer el agradecimiento.</summary>
+    public enum VoiceSourceMode
+    {
+        Microfono,
+        Escritorio,
+        Ambos,
+    }
+
     internal sealed class VoiceService : IDisposable
     {
+        public sealed class Options
+        {
+            public string Culture { get; set; }
+
+            public IList<string> Phrases { get; set; }
+
+            public VoiceSourceMode Sources { get; set; }
+
+            public float MinConfidence { get; set; }
+
+            public float DesktopMinConfidence { get; set; }
+
+            public float DesktopDelaySeconds { get; set; }
+        }
+
         private const string ExitedMarker = "\u0000EXITED";
 
         private readonly ICoreLog log;
@@ -39,7 +62,7 @@ namespace Coophead.Plugin
             get { return listening; }
         }
 
-        public bool Start(string executablePath, string culture, IList<string> phrases, float minConfidence)
+        public bool Start(string executablePath, Options options)
         {
             if (!File.Exists(executablePath))
             {
@@ -47,11 +70,14 @@ namespace Coophead.Plugin
                 return false;
             }
 
-            string joined = VoiceProtocol.JoinPhrases(phrases);
+            string joined = VoiceProtocol.JoinPhrases(options.Phrases);
             var info = new ProcessStartInfo(executablePath)
             {
-                Arguments = "--culture \"" + SanitizeCulture(culture) + "\" --phrases \"" + joined
-                    + "\" --min-confidence " + minConfidence.ToString("0.00", CultureInfo.InvariantCulture),
+                Arguments = "--culture \"" + SanitizeCulture(options.Culture) + "\" --phrases \"" + joined
+                    + "\" --sources " + DescribeSources(options.Sources)
+                    + " --min-confidence " + options.MinConfidence.ToString("0.00", CultureInfo.InvariantCulture)
+                    + " --desktop-min-confidence " + options.DesktopMinConfidence.ToString("0.00", CultureInfo.InvariantCulture)
+                    + " --desktop-delay-ms " + ((int)(options.DesktopDelaySeconds * 1000f)).ToString(CultureInfo.InvariantCulture),
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
@@ -166,6 +192,19 @@ namespace Coophead.Plugin
             }
 
             MarkGone();
+        }
+
+        private static string DescribeSources(VoiceSourceMode mode)
+        {
+            switch (mode)
+            {
+                case VoiceSourceMode.Escritorio:
+                    return VoiceProtocol.SourceDesktop;
+                case VoiceSourceMode.Ambos:
+                    return VoiceProtocol.SourceMicrophone + "," + VoiceProtocol.SourceDesktop;
+                default:
+                    return VoiceProtocol.SourceMicrophone;
+            }
         }
 
         /// <summary>Solo letras y guiones («es-ES»); cualquier otra cosa vuelve al valor por defecto.</summary>

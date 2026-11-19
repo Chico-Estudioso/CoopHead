@@ -29,11 +29,20 @@ namespace Coophead.Core.Voice
     public sealed class VoiceMessage
     {
         public VoiceMessage(VoiceMessageKind kind, string text, float confidence)
+            : this(kind, text, confidence, string.Empty)
+        {
+        }
+
+        public VoiceMessage(VoiceMessageKind kind, string text, float confidence, string source)
         {
             Kind = kind;
             Text = text ?? string.Empty;
             Confidence = confidence;
+            Source = source ?? string.Empty;
         }
+
+        /// <summary>Fuente de audio que reconoció la frase («mic» o «escritorio»); vacío si no se indica.</summary>
+        public string Source { get; private set; }
 
         public VoiceMessageKind Kind { get; private set; }
 
@@ -64,6 +73,10 @@ namespace Coophead.Core.Voice
         public const string TestEnd = "TEST_END";
 
         public const float MaxTestSeconds = 15f;
+
+        // Fuentes de audio del ayudante.
+        public const string SourceMicrophone = "mic";
+        public const string SourceDesktop = "escritorio";
 
         public static string Test(float seconds)
         {
@@ -106,6 +119,17 @@ namespace Coophead.Core.Voice
         public static string FormatHeard(float confidence, string text)
         {
             return Heard + " " + confidence.ToString("0.00", CultureInfo.InvariantCulture) + " " + SingleLine(text);
+        }
+
+        /// <summary>«HEARD 0.82 escritorio gracias cari»: incluye la fuente de audio.</summary>
+        public static string FormatHeard(float confidence, string text, string source)
+        {
+            return Heard + " " + confidence.ToString("0.00", CultureInfo.InvariantCulture) + " " + SingleLine(source) + " " + SingleLine(text);
+        }
+
+        public static bool IsKnownSource(string source)
+        {
+            return source == SourceMicrophone || source == SourceDesktop;
         }
 
         public static VoiceMessage Parse(string line)
@@ -223,7 +247,16 @@ namespace Coophead.Core.Voice
                 return new VoiceMessage(VoiceMessageKind.Unknown, rest, 0f);
             }
 
-            return new VoiceMessage(VoiceMessageKind.Heard, text, confidence);
+            string source = string.Empty;
+            int next = text.IndexOf(' ');
+            string first = next >= 0 ? text.Substring(0, next) : text;
+            if (IsKnownSource(first))
+            {
+                source = first;
+                text = next >= 0 ? text.Substring(next + 1) : string.Empty;
+            }
+
+            return new VoiceMessage(VoiceMessageKind.Heard, text, confidence, source);
         }
 
         private static string SingleLine(string text)

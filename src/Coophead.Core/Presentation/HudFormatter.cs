@@ -53,7 +53,11 @@ namespace Coophead.Core.Presentation
 
             if (state.RestartPending)
             {
-                lines.Add("¡Límite alcanzado! (" + (state.RestartReason == RestartReason.TeamLimit ? "equipo" : "individual") + ")");
+                lines.Add("¡Límite alcanzado! (" + DescribeLimit(state.RestartReason) + ") · reiniciando");
+            }
+            else if (state.LimitReached != RestartReason.None)
+            {
+                lines.Add("¡Límite alcanzado! (" + DescribeLimit(state.LimitReached) + ") · reinicio automático desactivado");
             }
 
             foreach (ThanksWindow window in session.Thanks.Pending)
@@ -93,6 +97,10 @@ namespace Coophead.Core.Presentation
         private static string DescribePlayer(PlayerRoundStats stats, int limit)
         {
             string received = limit > 0 ? stats.RevivesReceived + "/" + limit : stats.RevivesReceived.ToString(Spanish);
+            if (stats.TotalRevivesReceived != stats.RevivesReceived)
+            {
+                received += " (total " + stats.TotalRevivesReceived + ")";
+            }
             string line = stats.Slot.Label() + (stats.IsAlive ? "" : " (fantasma)")
                 + ": recibidas " + received
                 + " · dadas " + stats.RevivesGiven
@@ -103,6 +111,11 @@ namespace Coophead.Core.Presentation
             }
 
             return line;
+        }
+
+        private static string DescribeLimit(RestartReason reason)
+        {
+            return reason == RestartReason.TeamLimit ? "equipo" : "individual";
         }
 
         private static string DescribeThanksChannel(CoopheadConfig config, HudContext context)

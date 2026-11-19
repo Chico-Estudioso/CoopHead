@@ -69,7 +69,42 @@ namespace Coophead.Core.Tests
 
             session.OnPlayerRevived(P1, P2, "a", 2f);
             IList<string> lines = HudFormatter.BuildLines(session, config, new HudContext(), 2f);
-            Assert.Contains("¡Límite alcanzado! (equipo)", lines);
+            Assert.Contains("¡Límite alcanzado! (equipo) · reiniciando", lines);
+        }
+
+        [Fact]
+        public void SinReinicioAutomaticoElLimiteSeVeIgualmente()
+        {
+            var config = new CoopheadConfig();
+            config.Rules.AutoRestartEnabled = false;
+            CoopheadSession session = NewSession(config);
+            session.StartLevel("FlowerLevel");
+            for (int i = 0; i < 3; i++)
+            {
+                session.OnPlayerDied(P2, "g" + i, i * 10f);
+                session.OnPlayerRevived(P2, P1, "g" + i, (i * 10f) + 1f);
+                session.OnManualThanks(P2, (i * 10f) + 2f);
+            }
+
+            IList<string> lines = HudFormatter.BuildLines(session, config, new HudContext(), 30f);
+
+            Assert.Contains("¡Límite alcanzado! (individual) · reinicio automático desactivado", lines);
+        }
+
+        [Fact]
+        public void MuestraElTotalCuandoLosCreditosLoReducen()
+        {
+            var config = new CoopheadConfig();
+            CoopheadSession session = NewSession(config);
+            session.StartLevel("FlowerLevel");
+            session.OnPlayerDied(P1, "a", 1f);
+            session.OnPlayerRevived(P1, P2, "a", 2f); // P1 recibe 1
+            session.OnPlayerDied(P2, "b", 3f);
+            session.OnPlayerRevived(P2, P1, "b", 4f); // P1 rescata: su neto baja a 0
+
+            IList<string> lines = HudFormatter.BuildLines(session, config, new HudContext(), 5f);
+
+            Assert.StartsWith("P1: recibidas 0/3 (total 1)", lines[1]);
         }
 
         [Fact]

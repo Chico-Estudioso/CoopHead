@@ -25,6 +25,7 @@ No incluir en la release ensamblados propietarios de Cuphead ni archivos del jue
 | BepInEx.Core | 5.4.21 | LGPL-2.1 | No (solo compilación; lo aporta la instalación) | API de plugins y configuración. |
 | UnityEngine.Modules | 2017.4.9 | Ensamblados de referencia de Unity | No (solo compilación) | Compilar contra la API de Unity sin copiar DLL del juego. |
 
+| NAudio.Core y NAudio.Wasapi | 2.2.1 | MIT | Sí (junto al ayudante de voz) | Capturar el audio del escritorio (WASAPI en bucle) y convertirlo para el reconocedor. Aviso: Copyright (c) Mark Heath y colaboradores. |
 | System.Speech | .NET Framework 4.8 | Componente de Windows | No (lo aporta Windows) | Reconocedor de voz local del ayudante `Coophead.Voice.exe`. |
 
 `Coophead.Core` no tiene dependencias en tiempo de ejecución. El plugin solo depende de lo que ya trae la instalación de BepInEx y del juego.

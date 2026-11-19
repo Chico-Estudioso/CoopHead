@@ -19,6 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- NAudio (MIT): captura WASAPI en bucle del audio del escritorio (p. ej. la voz de la pareja por Parsec). -->
+    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Coophead.Core\Coophead.Core.csproj" />
   </ItemGroup>
 
