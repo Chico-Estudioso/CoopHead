@@ -29,6 +29,11 @@ namespace Coophead.Plugin.GameIntegration
             new HookSpec("PlayerDeathParrySwitch", "OnParryPrePause", "ParryRevive", "Rescate por parry"),
             new HookSpec("PlayerDeathEffect", "ReviveOutOfFrame", "StealRevive", "Robo de corazón (diagnóstico)"),
             new HookSpec("PlayerStatsManager", "OnRevive", "StatsRevive", "Reanimación confirmada por el juego"),
+            new HookSpec("DamageDealer", "DealDamage", "DamageDealt", "Daño infligido (estadística)"),
+            new HookSpec("PlayerStatsManager", "OnParry", "StatsParry", "Parry (estadística)"),
+            new HookSpec("PlayerStatsManager", "OnSuper", "StatsSuper", "Súper (estadística)"),
+            new HookSpec("PlayerStatsManager", "OnEx", "StatsEx", "EX (estadística)"),
+            new HookSpec("PlayerStatsManager", "TakeDamage", "StatsTakeDamage", "Golpe recibido (estadística)") { PrefixName = "StatsTakeDamagePrefix" },
         };
 
         public static IList<HookStatus> Install(Harmony harmony, GameEventTranslator eventTranslator, ICoreLog coreLog)
@@ -67,7 +72,8 @@ namespace Coophead.Plugin.GameIntegration
                 }
 
                 MethodInfo postfix = typeof(GameHooks).GetMethod(spec.PostfixName, BindingFlags.Static | BindingFlags.NonPublic);
-                harmony.Patch(original, postfix: new HarmonyMethod(postfix));
+                MethodInfo prefix = spec.PrefixName == null ? null : typeof(GameHooks).GetMethod(spec.PrefixName, BindingFlags.Static | BindingFlags.NonPublic);
+                harmony.Patch(original, prefix: prefix == null ? null : new HarmonyMethod(prefix), postfix: new HarmonyMethod(postfix));
                 return new HookStatus(spec, true, Signature(original));
             }
             catch (Exception e)
@@ -118,22 +124,22 @@ namespace Coophead.Plugin.GameIntegration
 
         private static void LevelAwake(object __instance)
         {
-            Guard("Level.Awake", () => translator.LevelStarted(__instance.GetType().Name, InstanceId(__instance)));
+            Guard("Level.Awake", () => translator.LevelStarted(__instance.GetType().Name, InstanceId(__instance), Time.time));
         }
 
         private static void LevelWon(object __instance)
         {
-            Guard("Level.OnWin", () => translator.LevelEnded(LevelEndReason.Won, "Level.OnWin", InstanceId(__instance)));
+            Guard("Level.OnWin", () => translator.LevelEnded(LevelEndReason.Won, "Level.OnWin", InstanceId(__instance), Time.time));
         }
 
         private static void LevelLost(object __instance)
         {
-            Guard("Level._OnLose", () => translator.LevelEnded(LevelEndReason.Lost, "Level._OnLose", InstanceId(__instance)));
+            Guard("Level._OnLose", () => translator.LevelEnded(LevelEndReason.Lost, "Level._OnLose", InstanceId(__instance), Time.time));
         }
 
         private static void LevelDestroyed(object __instance)
         {
-            Guard("Level.OnDestroy", () => translator.LevelEnded(LevelEndReason.Exited, "Level.OnDestroy", InstanceId(__instance)));
+            Guard("Level.OnDestroy", () => translator.LevelEnded(LevelEndReason.Exited, "Level.OnDestroy", InstanceId(__instance), Time.time));
         }
 
         private static void LevelPlayerDeath(object[] __args)
@@ -186,6 +192,112 @@ namespace Coophead.Plugin.GameIntegration
             });
         }
 
+        // ---- Estadísticas de combate ----
+
+        private static FieldInfo lastDamagePlayer;
+        private static bool lastDamagePlayerResolved;
+
+        /// <summary>Se llama con cada impacto: nada de log y lo mínimo de reflexión.</summary>
+        private static void DamageDealt(object __instance, float __result)
+        {
+            if (translator == null || !(__result > 0f))
+            {
+                return;
+            }
+
+            try
+            {
+                int playerId = GameReflection.ReadPlayerId(__instance, "PlayerId");
+                if (playerId != 0 && playerId != 1)
+                {
+                    playerId = LastDamagePlayer(__instance);
+                }
+
+                translator.DamageDealt(playerId, __result);
+            }
+            catch (Exception e)
+            {
+                if (log != null)
+                {
+                    log.Error("Error en el hook DamageDealer.DealDamage: " + e.Message);
+                }
+            }
+        }
+
+        private static int LastDamagePlayer(object dealer)
+        {
+            if (!lastDamagePlayerResolved)
+            {
+                lastDamagePlayerResolved = true;
+                lastDamagePlayer = AccessTools.Field(dealer.GetType(), "lastPlayer");
+            }
+
+            if (lastDamagePlayer == null || !lastDamagePlayer.IsStatic)
+            {
+                return -1;
+            }
+
+            try
+            {
+                return Convert.ToInt32(lastDamagePlayer.GetValue(null));
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
+        }
+
+        private static int StatsPlayerId(object stats)
+        {
+            return GameReflection.ReadPlayerId(GameReflection.ReadMember(stats, "basePlayer"), "id");
+        }
+
+        private static void StatsParry(object __instance)
+        {
+            Guard("PlayerStatsManager.OnParry", () => translator.Parry(StatsPlayerId(__instance)));
+        }
+
+        private static void StatsSuper(object __instance)
+        {
+            Guard("PlayerStatsManager.OnSuper", () => translator.Super(StatsPlayerId(__instance)));
+        }
+
+        private static void StatsEx(object __instance)
+        {
+            Guard("PlayerStatsManager.OnEx", () => translator.Ex(StatsPlayerId(__instance)));
+        }
+
+        /// <summary>Guarda la vida antes del golpe para contar solo los que la quitan (no los de invencibilidad).</summary>
+        private static void StatsTakeDamagePrefix(object __instance, out int __state)
+        {
+            __state = ReadHealth(__instance);
+        }
+
+        private static void StatsTakeDamage(object __instance, int __state)
+        {
+            Guard("PlayerStatsManager.TakeDamage", () =>
+            {
+                int health = ReadHealth(__instance);
+                if (__state >= 0 && health >= 0 && health < __state)
+                {
+                    translator.HitTaken(StatsPlayerId(__instance));
+                }
+            });
+        }
+
+        private static int ReadHealth(object stats)
+        {
+            try
+            {
+                object value = GameReflection.ReadMember(stats, "Health");
+                return value == null ? -1 : Convert.ToInt32(value);
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
+        }
+
         private static Component FindGhost(Component parrySwitch)
         {
             if (parrySwitch == null)
@@ -217,6 +329,9 @@ namespace Coophead.Plugin.GameIntegration
             public string MethodName { get; private set; }
 
             public string PostfixName { get; private set; }
+
+            /// <summary>Prefijo opcional (p. ej. para guardar estado antes del método original).</summary>
+            public string PrefixName { get; set; }
 
             public string Purpose { get; private set; }
         }

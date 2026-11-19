@@ -80,6 +80,7 @@ namespace Coophead.Core.Rules
             SessionNumber = state.SessionNumber;
             Reason = reason;
             TeamRevives = state.TeamRevives;
+            DurationSeconds = state.DurationSeconds;
             RestartReason = state.RestartReason;
             PlayerOne = state.Get(PlayerSlot.PlayerOne).Clone();
             PlayerTwo = state.Get(PlayerSlot.PlayerTwo).Clone();
@@ -92,6 +93,9 @@ namespace Coophead.Core.Rules
         public LevelEndReason Reason { get; private set; }
 
         public int TeamRevives { get; private set; }
+
+        /// <summary>Duración del intento en segundos de juego; 0 si se desconoce.</summary>
+        public float DurationSeconds { get; private set; }
 
         public RestartReason RestartReason { get; private set; }
 

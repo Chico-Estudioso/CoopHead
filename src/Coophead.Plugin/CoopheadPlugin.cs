@@ -7,6 +7,7 @@ using Coophead.Core.Configuration;
 using Coophead.Core.Integration;
 using Coophead.Core.Presentation;
 using Coophead.Core.Roulette;
+using Coophead.Core.Stats;
 using Coophead.Core.Thanks;
 using Coophead.Core.Voice;
 using Coophead.Plugin.GameIntegration;
@@ -39,6 +40,8 @@ namespace Coophead.Plugin
         private readonly HudOverlay overlay = new HudOverlay();
         private readonly HudContext hudContext = new HudContext();
         private IList<string> summaryLines;
+        private StatsStore statsStore;
+        private StatsBook statsBook;
         private ConfigEntry<bool> voiceEnabled;
         private ConfigEntry<string> voiceCulture;
         private ConfigEntry<float> voiceMinConfidence;
@@ -70,6 +73,11 @@ namespace Coophead.Plugin
             get { return session; }
         }
 
+        internal StatsBook Stats
+        {
+            get { return statsBook; }
+        }
+
         internal bool DiagnosticsEnabled
         {
             get { return diagnostics != null && diagnostics.Value; }
@@ -90,6 +98,8 @@ namespace Coophead.Plugin
 
                 var applier = new RoutingPenaltyApplier(gameEffects, new DisabledPenaltyApplier(log), () => applyEffects.Value);
                 session = new CoopheadSession(coreConfig, applier, log);
+                statsStore = new StatsStore(System.IO.Path.Combine(Paths.ConfigPath, "Coophead"), log);
+                statsBook = statsStore.Load();
                 SubscribeDiagnostics();
                 active = modEnabled.Value;
                 LogEnvironment();
@@ -456,6 +466,11 @@ namespace Coophead.Plugin
             };
             session.LevelEnded += summary =>
             {
+                if (statsBook.Record(summary, DateTime.UtcNow) != null)
+                {
+                    statsStore.Save(statsBook);
+                }
+
                 if (summarySeconds.Value > 0f)
                 {
                     summaryLines = HudFormatter.BuildSummary(summary);
@@ -472,6 +487,8 @@ namespace Coophead.Plugin
         private static string Describe(Core.Rules.PlayerRoundStats stats)
         {
             return "muertes " + stats.Deaths
+                + ", daño " + stats.DamageDealt.ToString("0")
+                + ", parrys " + stats.Parries
                 + ", rescates dados " + stats.RevivesGiven
                 + ", recibidos " + stats.TotalRevivesReceived
                 + ", créditos usados " + stats.CreditsConsumed

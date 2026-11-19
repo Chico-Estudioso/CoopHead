@@ -51,6 +51,16 @@ Mapeo previsto: `PlayerId.PlayerOne` → `PlayerSlot.PlayerOne`, `PlayerId.Playe
 - Si ambos están muertos, el nivel se pierde.
 - Por tanto, «fantasma no rescatado» no es un evento del juego: como mucho, «fantasma fuera de cámara». Queda fuera de alcance por ahora.
 
+## Estadísticas de combate
+| Hook | Lectura | Uso | Estado |
+|---|---|---|---|
+| `DamageDealer.DealDamage` (postfix) | `__result` (daño) y `PlayerId`, o `DamageDealer.lastPlayer` | Daño infligido | Candidato |
+| `PlayerStatsManager.OnParry` | `basePlayer.id` | Parrys | Candidato |
+| `PlayerStatsManager.OnSuper` / `OnEx` | `basePlayer.id` | Súper y EX | Candidato |
+| `PlayerStatsManager.TakeDamage` (prefijo + postfix) | `Health` antes y después | Golpes que quitan vida | Candidato |
+
+Origen: Cuphead 3-Player Co-op (MIT). Solo leen datos; el de daño no escribe en el log porque se llama con cada impacto.
+
 ## Efectos de la ruleta (experimental, `AplicarEfectos = false` por defecto)
 Implementados en `src/Coophead.Plugin/GameIntegration/GameEffectsApplier.cs`, resueltos por nombre:
 

@@ -82,7 +82,9 @@ namespace Coophead.Core.Presentation
             foreach (PlayerSlot slot in PlayerSlots.All())
             {
                 PlayerRoundStats stats = summary.Get(slot);
-                lines.Add(slot.Label() + ": muertes " + stats.Deaths
+                lines.Add(slot.Label() + ": daño " + stats.DamageDealt.ToString("0", Spanish)
+                    + " · parrys " + stats.Parries
+                    + " · muertes " + stats.Deaths
                     + " · rescates dados " + stats.RevivesGiven
                     + " · recibidos " + stats.TotalRevivesReceived
                     + " · créditos usados " + stats.CreditsConsumed
@@ -90,7 +92,8 @@ namespace Coophead.Core.Presentation
                     + " · castigos " + stats.PenaltiesReceived);
             }
 
-            lines.Add("Equipo: " + summary.TeamRevives + (summary.TeamRevives == 1 ? " reanimación" : " reanimaciones"));
+            lines.Add("Equipo: " + summary.TeamRevives + (summary.TeamRevives == 1 ? " reanimación" : " reanimaciones")
+                + (summary.DurationSeconds > 0f ? " · " + Stats.StatsComparison.FormatDuration(summary.DurationSeconds) : string.Empty));
             return lines;
         }
 

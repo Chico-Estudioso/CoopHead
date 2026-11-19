@@ -81,14 +81,24 @@ namespace Coophead.Core
 
         public void StartLevel(string levelKey)
         {
+            StartLevel(levelKey, 0f);
+        }
+
+        public void StartLevel(string levelKey, float now)
+        {
             ResetTransientState("Empieza un nivel nuevo.");
-            rules.StartLevel(levelKey);
+            rules.StartLevel(levelKey, now);
         }
 
         public LevelSummary EndLevel(LevelEndReason reason)
         {
+            return EndLevel(reason, float.NaN);
+        }
+
+        public LevelSummary EndLevel(LevelEndReason reason, float now)
+        {
             ResetTransientState("El nivel ha terminado.");
-            LevelSummary summary = rules.EndLevel(reason);
+            LevelSummary summary = rules.EndLevel(reason, now);
             if (summary != null)
             {
                 Raise(LevelEnded, summary);
@@ -149,6 +159,53 @@ namespace Coophead.Core
         public EventStatus OnPlayerRevivedWithoutRescue(PlayerSlot player, string eventKey, float now)
         {
             return rules.OnPlayerRevivedWithoutRescue(player, eventKey);
+        }
+
+        // --- Estadísticas de combate ---
+
+        public void RecordParry(PlayerSlot player)
+        {
+            PlayerRoundStats stats = rules.ActiveStats(player);
+            if (stats != null)
+            {
+                stats.Parries++;
+            }
+        }
+
+        public void RecordSuper(PlayerSlot player)
+        {
+            PlayerRoundStats stats = rules.ActiveStats(player);
+            if (stats != null)
+            {
+                stats.Supers++;
+            }
+        }
+
+        public void RecordEx(PlayerSlot player)
+        {
+            PlayerRoundStats stats = rules.ActiveStats(player);
+            if (stats != null)
+            {
+                stats.ExMoves++;
+            }
+        }
+
+        public void RecordDamageDealt(PlayerSlot player, float amount)
+        {
+            PlayerRoundStats stats = rules.ActiveStats(player);
+            if (stats != null && amount > 0f && !float.IsInfinity(amount))
+            {
+                stats.DamageDealt += amount;
+            }
+        }
+
+        public void RecordHitTaken(PlayerSlot player)
+        {
+            PlayerRoundStats stats = rules.ActiveStats(player);
+            if (stats != null)
+            {
+                stats.HitsTaken++;
+            }
         }
 
         /// <summary>Texto reconocido por el servicio de voz local, entregado solo durante una ventana.</summary>
@@ -212,8 +269,14 @@ namespace Coophead.Core
             }
 
             RouletteResult result = roulette.Spin(targetStats, now);
+            if (result.Outcome == RouletteOutcome.DoublePunishment)
+            {
+                targetStats.DoublePunishments++;
+            }
+
             foreach (EffectApplication effect in result.Effects)
             {
+                targetStats.AddEffect(effect.Effect);
                 penalties.Start(target, effect.Effect, effect.DurationSeconds, now);
             }
 
@@ -231,7 +294,16 @@ namespace Coophead.Core
             LevelSessionState session = rules.Session;
             if (session != null && session.IsActive)
             {
-                session.Get(window.Rescued).ThanksRecognized++;
+                PlayerRoundStats stats = session.Get(window.Rescued);
+                stats.ThanksRecognized++;
+                if (window.Resolution == ThanksResolution.Thanked)
+                {
+                    stats.ThanksByVoice++;
+                }
+                else
+                {
+                    stats.ThanksManual++;
+                }
             }
 
             Raise(ThanksWindowClosed, window);

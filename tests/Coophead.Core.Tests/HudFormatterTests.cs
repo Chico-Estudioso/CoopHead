@@ -120,8 +120,8 @@ namespace Coophead.Core.Tests
             IList<string> summary = HudFormatter.BuildSummary(session.EndLevel(LevelEndReason.Won));
 
             Assert.Equal("Resumen · FlowerLevel (victoria)", summary[0]);
-            Assert.Equal("P1: muertes 1 · rescates dados 0 · recibidos 1 · créditos usados 0 · gracias 1 · castigos 0", summary[1]);
-            Assert.Equal("P2: muertes 0 · rescates dados 1 · recibidos 0 · créditos usados 0 · gracias 0 · castigos 0", summary[2]);
+            Assert.Equal("P1: daño 0 · parrys 0 · muertes 1 · rescates dados 0 · recibidos 1 · créditos usados 0 · gracias 1 · castigos 0", summary[1]);
+            Assert.Equal("P2: daño 0 · parrys 0 · muertes 0 · rescates dados 1 · recibidos 0 · créditos usados 0 · gracias 0 · castigos 0", summary[2]);
             Assert.Equal("Equipo: 1 reanimación", summary[3]);
         }
 

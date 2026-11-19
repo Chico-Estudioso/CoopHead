@@ -38,8 +38,13 @@ namespace Coophead.Core.Rules
         /// </summary>
         public LevelSessionState StartLevel(string levelKey)
         {
+            return StartLevel(levelKey, 0f);
+        }
+
+        public LevelSessionState StartLevel(string levelKey, float now)
+        {
             sessionCounter++;
-            Session = new LevelSessionState(levelKey ?? string.Empty, sessionCounter);
+            Session = new LevelSessionState(levelKey ?? string.Empty, sessionCounter) { StartTime = now };
             log.Info("Nivel iniciado: " + Session.LevelKey + " (sesión " + sessionCounter + ").");
             return Session;
         }
@@ -47,12 +52,20 @@ namespace Coophead.Core.Rules
         /// <summary>Cierra el intento actual y devuelve su resumen. Null si no había nivel activo.</summary>
         public LevelSummary EndLevel(LevelEndReason reason)
         {
+            return EndLevel(reason, float.NaN);
+        }
+
+        /// <param name="reason">Motivo del fin del intento.</param>
+        /// <param name="now">Reloj del juego al terminar; NaN si se desconoce (la duración queda a 0).</param>
+        public LevelSummary EndLevel(LevelEndReason reason, float now)
+        {
             if (Session == null || !Session.IsActive)
             {
                 return null;
             }
 
             Session.IsActive = false;
+            Session.DurationSeconds = float.IsNaN(now) ? 0f : System.Math.Max(0f, now - Session.StartTime);
             log.Info("Nivel terminado: " + Session.LevelKey + " (" + reason + ").");
             return new LevelSummary(Session, reason);
         }
@@ -196,6 +209,17 @@ namespace Coophead.Core.Rules
             }
 
             return RestartReason.None;
+        }
+
+        /// <summary>Estadísticas de combate: no afectan a las reglas. Devuelve null si no hay intento activo.</summary>
+        internal PlayerRoundStats ActiveStats(PlayerSlot player)
+        {
+            if (!config.Enabled || Session == null || !Session.IsActive || !PlayerSlots.IsDefined(player))
+            {
+                return null;
+            }
+
+            return Session.Get(player);
         }
 
         /// <summary>Comprobaciones compartidas. Devuelve el motivo para ignorar o null si se puede seguir.</summary>
