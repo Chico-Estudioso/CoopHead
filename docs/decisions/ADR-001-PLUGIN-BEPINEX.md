@@ -1,6 +1,6 @@
 # ADR-001 — Plugin BepInEx
 
-Estado: Propuesto. M0 de escritorio favorable (BepInEx 5.4.x, `net35`); pendiente de confirmar en la copia local.
+Estado: **Aceptado** (19/11/2026). Confirmado en la instalación del usuario: Cuphead 1.3.4 x64, Unity 2017.4.9f1, Mono CLR 2.0, BepInEx 5.4.23.5; el plugin `net35` carga y resuelve sus hooks.
 
 ## Contexto
 Cuphead es un juego Unity y la comunidad utiliza plugins BepInEx. La instalación local del usuario puede diferir de una instalación estándar de Steam/Epic.

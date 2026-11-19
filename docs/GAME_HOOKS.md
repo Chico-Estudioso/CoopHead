@@ -2,7 +2,9 @@
 
 > **Ningún hook de esta lista está verificado contra la instalación local del usuario.** Los nombres proceden de leer código comunitario (ver «Origen»). M2 debe confirmarlos uno a uno con los ensamblados exactos de la copia de pruebas antes de activar reglas que reinicien o castiguen.
 
-Estados: `Candidato` (visto en código comunitario), `Verificado` (comprobado en la build del usuario con log), `Descartado`.
+Estados: `Candidato` (visto en código comunitario), `Presente (1.3.4)` (el tipo y el método existen con esa firma en la build del usuario; falta comprobar cuándo y cómo se disparan), `Verificado` (comportamiento comprobado en partida con log), `Descartado`.
+
+Prueba de carga del 19/11/2026 en Cuphead 1.3.4: los 9 hooks instrumentados se resolvieron e instalaron (`docs/pruebas/2026-11-19-carga-1.3.4.md`).
 
 ## Origen de la evidencia
 - **Cuphead 3-Player Co-op** (Meloon33, licencia MIT): plugin BepInEx 5 que parchea estos métodos con Harmony. Es la referencia principal.
@@ -15,7 +17,7 @@ Los proyectos sin licencia se usan solo como lectura; nada de su código entra e
 | Elemento | Detalle | Estado |
 |---|---|---|
 | `PlayerId` (enum) | `PlayerOne`, `PlayerTwo`, `Any`, `None` | Candidato |
-| `PlayerManager.GetPlayer(PlayerId)` | Devuelve `AbstractPlayerController` | Candidato |
+| `PlayerManager.GetPlayer(PlayerId)` | Devuelve `AbstractPlayerController` | `Presente (1.3.4)` |
 | `AbstractPlayerController.id` | `PlayerId` del jugador | Candidato |
 | `PlayerStatsManager.basePlayer` | Controlador dueño de las estadísticas | Candidato |
 
@@ -24,9 +26,10 @@ Mapeo previsto: `PlayerId.PlayerOne` → `PlayerSlot.PlayerOne`, `PlayerId.Playe
 ## Ciclo de nivel
 | Hook | Uso en Coophead | Estado |
 |---|---|---|
-| `Level.Awake` (postfix) | `StartLevel`: nuevo intento, contadores a cero | Candidato |
-| `Level.OnWin` (postfix) | `EndLevel(Won)` | Candidato |
-| `Level._OnLose` | `EndLevel(Lost)`; ambos muertos | Candidato |
+| `Level.Awake` (postfix) | `StartLevel`: nuevo intento, contadores a cero | `Presente (1.3.4)` |
+| `Level.OnWin` (postfix) | `EndLevel(Won)` | `Presente (1.3.4)` |
+| `Level._OnLose` | `EndLevel(Lost)`; ambos muertos | `Presente (1.3.4)` |
+| `Level.OnDestroy` | `EndLevel(Exited)` | `Presente (1.3.4)` |
 | `SceneLoader.ReloadLevel()` | Vía de reinicio del nivel | Candidato |
 | `LevelGameOverGUI.Retry` | Reintento desde la pantalla de derrota | Candidato |
 | `Level.LevelType`, `Level.IsDicePalace`, `Level.IsChessBoss`, `PlatformingLevel` | Distinguir jefes, plataformas y tutorial | Candidato |
@@ -34,12 +37,12 @@ Mapeo previsto: `PlayerId.PlayerOne` → `PlayerSlot.PlayerOne`, `PlayerId.Playe
 ## Muerte, fantasma y reanimación
 | Hook | Firma observada | Uso en Coophead | Estado |
 |---|---|---|---|
-| `Level.OnPlayerDeath` (privado) | `(PlayerStatsManager.DeathEvent e)`, `e.playerId` | `OnPlayerDied` | Candidato |
-| `PlayerDeathEffect.Start` / `OnDestroy` | Ciclo de vida del fantasma; campo privado `playerId` | Clave de deduplicación (instancia) | Candidato |
-| `PlayerDeathParrySwitch.OnParryPrePause` | `(AbstractPlayerController player)`: quien hace parry | `OnPlayerRevived` con rescatador = `player.id` y rescatado = `playerId` del `PlayerDeathEffect` padre | Candidato |
+| `Level.OnPlayerDeath` (privado) | `(DeathEvent e)`, `e.playerId` | Diagnóstico | `Presente (1.3.4)` |
+| `PlayerDeathEffect.Start` | Aparición del fantasma; campo privado `playerId` | `OnPlayerDied` con clave por instancia | `Presente (1.3.4)` |
+| `PlayerDeathParrySwitch.OnParryPrePause` | `(AbstractPlayerController player)`: quien hace parry | `OnPlayerRevived` con rescatador = `player.id` y rescatado = `playerId` del `PlayerDeathEffect` padre | `Presente (1.3.4)` |
 | `PlayerDeathEffect.OnParrySwitch` | Marca `exiting = true` y lanza la animación de rescate | Alternativa para confirmar el rescate por parry | Candidato |
-| `PlayerDeathEffect.ReviveOutOfFrame` | Robo de corazón fuera de cámara | **No contar como rescate** (ADR-004) | Candidato |
-| `PlayerStatsManager.OnRevive` | Se dispara en ambos tipos de reanimación | No usar sola: no distingue parry de robo | Candidato |
+| `PlayerDeathEffect.ReviveOutOfFrame` | Robo de corazón fuera de cámara | **No contar como rescate** (ADR-004) | `Presente (1.3.4)` |
+| `PlayerStatsManager.OnRevive` | Se dispara en ambos tipos de reanimación | Marca vivo sin contar | `Presente (1.3.4)` |
 | `PlayerStatsManager.PartnerCanSteal` | `Health > 1` | Diagnóstico | Candidato |
 
 ### Lo que dice la evidencia sobre el fantasma
@@ -53,9 +56,9 @@ Implementados en `src/Coophead.Plugin/GameIntegration/GameEffectsApplier.cs`, re
 
 | Efecto | Miembros usados | Restauración | Estado |
 |---|---|---|---|
-| Controles invertidos | `PlayerManager.GetPlayer(PlayerId)` → `stats` → `PlayerStatsManager.ReverseTime` | Se pone a 0. Además el propio juego lo descuenta, así que caduca solo aunque fallara la restauración | Candidato |
-| Movimiento lento | `LevelPlayerController.motor` → `LevelPlayerMotor.properties.moveSpeed` (490 en la referencia) | Valor original exacto, guardado por objeto y con contador | Candidato |
-| Dash limitado | `LevelPlayerMotor.properties.dashTime` (0,3 s en la referencia) | Valor original exacto | Candidato |
+| Controles invertidos | `PlayerManager.GetPlayer(PlayerId)` → `stats` → `PlayerStatsManager.ReverseTime` | Se pone a 0. Además el propio juego lo descuenta, así que caduca solo aunque fallara la restauración | `Presente (1.3.4)` |
+| Movimiento lento | `LevelPlayerController.motor` → `LevelPlayerMotor.properties.moveSpeed` (490 en la referencia) | Valor original exacto, guardado por objeto y con contador | Tipo presente (1.3.4); el campo se resuelve al aplicar |
+| Dash limitado | `LevelPlayerMotor.properties.dashTime` (0,3 s en la referencia) | Valor original exacto | Tipo presente (1.3.4); el campo se resuelve al aplicar |
 | Disparo lento | Sin vía segura identificada (la cadencia depende de cada arma) | — | No compatible: se quita de la ruleta al activar `AplicarEfectos` |
 
 - `ReverseTime` es el mecanismo de inversión que ya usa el juego: en la referencia solo invierte el eje horizontal al caminar dentro del nivel, no menús ni pausa.

@@ -3,7 +3,14 @@
 Fecha: 18 de noviembre de 2026. Alcance: lo que se puede investigar **sin acceso al equipo del usuario**. La inspección de la instalación local sigue pendiente.
 
 ## 1. Entorno detectado
-No inspeccionado: la sesión de trabajo se ejecuta en la nube y no tiene acceso al equipo ni a la carpeta de Cuphead. Pendiente: ruta de `Cuphead.exe`, versión, arquitectura, Unity, backend, DLC y ensamblados.
+Actualización del 19/11/2026, a partir del log de BepInEx del usuario (`docs/pruebas/2026-11-19-carga-1.3.4.md`):
+
+- Cuphead **1.3.4**, Windows, proceso de **64 bits**.
+- Unity **2017.4.9f1**, backend **Mono** con CLR **2.0.50727** (perfil .NET 3.5).
+- BepInEx **5.4.23.5** con HarmonyX.
+- Los 9 hooks instrumentados existen con la firma esperada.
+
+Sin comprobar: si Mortar se usó para instalar BepInEx y si el DLC está instalado.
 
 ## 2. Mortar
 No comprobado. Su web indica que permite elegir una carpeta de juego y que, para Cuphead, gestiona BepInEx 5. Hay que probarlo con la copia de pruebas; si no la detecta, se usa la instalación manual.
@@ -41,4 +48,4 @@ Arquitectura en `docs/ARQUITECTURA_PROPUESTA.md`. La lógica pura ya está imple
 4. Comprueba en `BepInEx/LogOutput.log` el mensaje de carga.
 
 ## 9. Decisión
-**GO condicionado** para M1 y la instrumentación de M2: el plugin se puede compilar sin ensamblados del juego y los hooks se resuelven en tiempo de ejecución con todas las reglas desactivadas por defecto. **NO-GO** para activar reinicios o castigos en el juego hasta completar la verificación de M2 en la copia local.
+Actualización del 19/11/2026: **GO** para M1 (el plugin carga en la versión real) y para la verificación de M2. Decisión original: **GO condicionado** para M1 y la instrumentación de M2: el plugin se puede compilar sin ensamblados del juego y los hooks se resuelven en tiempo de ejecución con todas las reglas desactivadas por defecto. **NO-GO** para activar reinicios o castigos en el juego hasta completar la verificación de M2 en la copia local.
