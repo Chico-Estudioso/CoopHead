@@ -31,6 +31,28 @@ namespace Coophead.Core.Tests
             Assert.Equal(text, message.Text);
         }
 
+        [Theory]
+        [InlineData("mic", true)]
+        [InlineData("escritorio", true)]
+        [InlineData("escritorio2", true)]
+        [InlineData("escritorio12", true)]
+        [InlineData("escritorioX", false)]
+        [InlineData("gracias", false)]
+        [InlineData("", false)]
+        public void FuentesConocidas(string source, bool known)
+        {
+            Assert.Equal(known, VoiceProtocol.IsKnownSource(source));
+        }
+
+        [Fact]
+        public void HeardDeUnaSalidaConcreta()
+        {
+            VoiceMessage message = VoiceProtocol.Parse(VoiceProtocol.FormatHeard(0.72f, "gracias amor", "escritorio2"));
+
+            Assert.Equal("escritorio2", message.Source);
+            Assert.Equal("gracias amor", message.Text);
+        }
+
         [Fact]
         public void FrasesDudosasYNoEntendidas()
         {

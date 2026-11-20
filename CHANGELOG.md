@@ -3,6 +3,10 @@
 Los cambios se documentan en español y se agrupan por versión.
 
 ## Sin publicar
+### Corregido (20/11/2026, voz de la pareja por Discord)
+- La fuente Escritorio escucha todas las salidas de audio activas (`DispositivoEscritorio = todos`), numeradas en el log y en F6: Discord puede sacar la voz por una salida distinta de la predeterminada.
+- Se baja el umbral de rechazo interno del reconocedor de Windows para que decida `ConfianzaMinima`.
+
 ### Corregido (20/11/2026, falsos negativos de la voz)
 - Margen de voz (`MargenVoz`, 1,5 s): una frase dicha a tiempo cuyo resultado llega tarde ya no se descarta.
 - La primera orden al ayudante de voz llegaba con un BOM invisible y se perdía («Orden desconocida»).

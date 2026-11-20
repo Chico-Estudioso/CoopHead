@@ -54,6 +54,7 @@ namespace Coophead.Plugin
         private ConfigEntry<VoiceSourceMode> voiceSources;
         private ConfigEntry<float> voiceDesktopMinConfidence;
         private ConfigEntry<float> voiceDesktopDelay;
+        private ConfigEntry<string> voiceDesktopDevices;
         private ConfigEntry<KeyboardShortcut> voiceTestKey;
         private VoiceService voice;
         private ConfigEntry<bool> applyEffects;
@@ -225,6 +226,8 @@ namespace Coophead.Plugin
                 new ConfigDescription("Confianza mínima para frases oídas por el escritorio. Más alta que la del micrófono porque ahí también suena el juego.", new AcceptableValueRange<float>(0.1f, 1f)));
             voiceDesktopDelay = Config.Bind(VoiceSection, "RetrasoEscritorio", 0.3f,
                 new ConfigDescription("Segundos que se ignora el escritorio al abrirse la ventana, para no confundir el sonido de reanimación del juego con un «gracias». Requiere reiniciar el juego.", new AcceptableValueRange<float>(0f, 2f)));
+            voiceDesktopDevices = Config.Bind(VoiceSection, "DispositivoEscritorio", "todos",
+                "Salidas de audio que se escuchan para la fuente Escritorio: «todos» (todas las activas; útil si Discord saca el sonido por otra salida), «predeterminado» o parte del nombre del dispositivo (p. ej. «Headphones»). Requiere reiniciar el juego.");
             voiceTestKey = Config.Bind(VoiceSection, "TeclaPruebaVoz", new KeyboardShortcut(KeyCode.F9),
                 "Escucha 5 s y escribe en el log lo que se ha reconocido, para probar el micrófono.");
             windowKey = Config.Bind(WindowSection, "TeclaVentana", new KeyboardShortcut(KeyCode.F6),
@@ -262,6 +265,7 @@ namespace Coophead.Plugin
                 MinConfidence = voiceMinConfidence.Value,
                 DesktopMinConfidence = voiceDesktopMinConfidence.Value,
                 DesktopDelaySeconds = voiceDesktopDelay.Value,
+                DesktopDevices = voiceDesktopDevices.Value,
             };
             if (!voice.Start(helper, options))
             {
@@ -298,6 +302,7 @@ namespace Coophead.Plugin
                     case VoiceMessageKind.Ready:
                         session.SetVoiceAvailable(true);
                         log.Info("Voz lista (" + message.Text + "). Reconocimiento local de Windows con modelos estadísticos; sin Internet, sin guardar audio.");
+                        VoiceLog.Add("voz lista: " + message.Text);
                         break;
                     case VoiceMessageKind.Unavailable:
                         session.SetVoiceAvailable(false);

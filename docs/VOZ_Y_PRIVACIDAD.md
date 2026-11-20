@@ -34,6 +34,13 @@ No incluir modelos grandes dentro del repositorio. El modelo se instalará local
 
 La fuente del escritorio también oye el juego: por eso tiene su propia `ConfianzaMinimaEscritorio` (0,6) y se ignora durante los primeros `RetrasoEscritorio` segundos (0,3 s), cuando suena el efecto de reanimación del juego. Es corto para que un «gracias» dicho justo al hacer el parry cuente. Con la latencia de Parsec puede convenir subir `VentanaSegundos` a 4.
 
+### Pareja por Discord
+Si tu pareja habla por Discord, su voz sale por la salida de audio que Discord tenga elegida (Ajustes de usuario → Voz y vídeo → Dispositivo de salida). No tiene por qué ser la salida predeterminada de Windows: muchos cascos tienen dos salidas («auriculares» y «manos libres/comunicaciones»), y Discord suele usar la de comunicaciones.
+
+- Por eso `DispositivoEscritorio = todos` (por defecto) escucha **todas las salidas activas** a la vez, cada una con su reconocedor y solo durante la ventana. En el log y en F6 cada una aparece numerada («escritorio1 = Auriculares…», «escritorio2 = Manos libres…»). Así se ve por cuál llega la voz de tu pareja, y se puede dejar solo esa escribiendo parte de su nombre.
+- El ayudante baja el umbral de rechazo interno del reconocedor de Windows, que descartaba frases antes de aplicar `ConfianzaMinima`.
+- Consejos: que el volumen de tu pareja en Discord sea alto; Discord no debe silenciar el audio («atenuación»); y si en F6 → «Últimas frases oídas» no aparece nada de ningún «escritorio» mientras ella habla, es que su audio no llega a ninguna salida capturada.
+
 ### Falsos negativos (partida del 20/11/2026)
 - **Retraso del reconocedor**: Windows entrega el resultado cuando terminas de hablar, a veces más de 1 s después. Una frase dicha al final del plazo llegaba tarde y se descartaba. Ahora hay un margen (`MargenVoz`, 1,5 s) en el que se sigue aceptando y el castigo espera.
 - **Primera orden perdida**: la primera línea que el plugin enviaba al ayudante llegaba con un BOM invisible y se rechazaba («Orden desconocida»). El ayudante lo limpia.
