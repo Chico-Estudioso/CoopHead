@@ -78,6 +78,7 @@ namespace Coophead.Core.Tests
             Assert.Null(config.Roulette.DebugSeed);
             Assert.Equal(reference.Balance.MaxPressure, config.Balance.MaxPressure);
             Assert.Equal(reference.Thanks.WindowSeconds, config.Thanks.WindowSeconds);
+            Assert.Equal(1.5f, config.Thanks.VoiceGraceSeconds);
             Assert.Equal(reference.Thanks.AcceptedNames, config.Thanks.AcceptedNames);
             foreach (RouletteOutcome outcome in RouletteOutcomes.All())
             {

@@ -34,6 +34,12 @@ No incluir modelos grandes dentro del repositorio. El modelo se instalará local
 
 La fuente del escritorio también oye el juego: por eso tiene su propia `ConfianzaMinimaEscritorio` (0,6) y se ignora durante los primeros `RetrasoEscritorio` segundos (0,3 s), cuando suena el efecto de reanimación del juego. Es corto para que un «gracias» dicho justo al hacer el parry cuente. Con la latencia de Parsec puede convenir subir `VentanaSegundos` a 4.
 
+### Falsos negativos (partida del 20/11/2026)
+- **Retraso del reconocedor**: Windows entrega el resultado cuando terminas de hablar, a veces más de 1 s después. Una frase dicha al final del plazo llegaba tarde y se descartaba. Ahora hay un margen (`MargenVoz`, 1,5 s) en el que se sigue aceptando y el castigo espera.
+- **Primera orden perdida**: la primera línea que el plugin enviaba al ayudante llegaba con un BOM invisible y se rechazaba («Orden desconocida»). El ayudante lo limpia.
+- **Audio del escritorio entrecortado**: la captura rellenaba con ceros cada lectura y metía microcortes en la voz. Ahora se entrega el audio tal como llega y solo se añade silencio cuando no suena nada.
+- **Diagnóstico**: el ayudante informa también de las frases oídas por debajo de la confianza mínima y de la voz que no se parece a la frase. Se ven en F6 → Ajustes → «Últimas frases oídas».
+
 ### Garantías de privacidad
 - Solo escucha entre la apertura y el cierre de una ventana de agradecimiento, o durante la prueba de micrófono (F9, 5 s). Esto vale para las dos fuentes: el audio del escritorio tampoco se captura fuera de esos momentos.
 - No guarda audio ni transcripciones; el texto reconocido se usa en memoria y se descarta. Solo se escribe en el log durante la prueba o con `Diagnostico` activado.

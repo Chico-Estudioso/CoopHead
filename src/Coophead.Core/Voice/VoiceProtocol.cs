@@ -24,6 +24,12 @@ namespace Coophead.Core.Voice
 
         /// <summary>Fin de una prueba de micrófono.</summary>
         TestEnd,
+
+        /// <summary>Frase de la gramática oída con confianza por debajo del mínimo: no cuenta, solo para ajustar.</summary>
+        Low,
+
+        /// <summary>Se oyó voz pero no se pareció a ninguna frase de la gramática.</summary>
+        Rejected,
     }
 
     public sealed class VoiceMessage
@@ -71,6 +77,8 @@ namespace Coophead.Core.Voice
         public const string Stopped = "STOPPED";
         public const string Error = "ERROR";
         public const string TestEnd = "TEST_END";
+        public const string LowConfidence = "LOW";
+        public const string RejectedSpeech = "REJECTED";
 
         public const float MaxTestSeconds = 15f;
 
@@ -127,6 +135,18 @@ namespace Coophead.Core.Voice
             return Heard + " " + confidence.ToString("0.00", CultureInfo.InvariantCulture) + " " + SingleLine(source) + " " + SingleLine(text);
         }
 
+        /// <summary>«LOW 0.41 escritorio gracias cari»: frase reconocida pero por debajo de la confianza mínima.</summary>
+        public static string FormatLow(float confidence, string text, string source)
+        {
+            return LowConfidence + " " + confidence.ToString("0.00", CultureInfo.InvariantCulture) + " " + SingleLine(source) + " " + SingleLine(text);
+        }
+
+        /// <summary>«REJECTED escritorio»: se oyó voz que no encaja con la gramática.</summary>
+        public static string FormatRejected(string source)
+        {
+            return RejectedSpeech + " " + SingleLine(source);
+        }
+
         public static bool IsKnownSource(string source)
         {
             return source == SourceMicrophone || source == SourceDesktop;
@@ -134,7 +154,8 @@ namespace Coophead.Core.Voice
 
         public static VoiceMessage Parse(string line)
         {
-            if (string.IsNullOrEmpty(line))
+            line = CleanLine(line);
+            if (line.Length == 0)
             {
                 return new VoiceMessage(VoiceMessageKind.Unknown, string.Empty, 0f);
             }
@@ -163,7 +184,11 @@ namespace Coophead.Core.Voice
                 case TestEnd:
                     return new VoiceMessage(VoiceMessageKind.TestEnd, rest, 0f);
                 case Heard:
-                    return ParseHeard(rest);
+                    return ParseHeard(rest, VoiceMessageKind.Heard);
+                case LowConfidence:
+                    return ParseHeard(rest, VoiceMessageKind.Low);
+                case RejectedSpeech:
+                    return new VoiceMessage(VoiceMessageKind.Rejected, string.Empty, 0f, rest);
                 default:
                     return new VoiceMessage(VoiceMessageKind.Unknown, line, 0f);
             }
@@ -236,7 +261,21 @@ namespace Coophead.Core.Voice
             return builder.ToString();
         }
 
-        private static VoiceMessage ParseHeard(string rest)
+        /// <summary>
+        /// Quita marcas de orden de bytes (BOM), retornos de carro y espacios de los extremos. Al redirigir la entrada o
+        /// la salida estándar en Windows, la primera línea puede llegar con un BOM invisible y cada línea con «\r».
+        /// </summary>
+        public static string CleanLine(string line)
+        {
+            if (string.IsNullOrEmpty(line))
+            {
+                return string.Empty;
+            }
+
+            return line.Trim().Trim('\uFEFF', '\u200B', '\r', '\n').Trim();
+        }
+
+        private static VoiceMessage ParseHeard(string rest, VoiceMessageKind kind)
         {
             int space = rest.IndexOf(' ');
             string number = space >= 0 ? rest.Substring(0, space) : rest;
@@ -256,7 +295,7 @@ namespace Coophead.Core.Voice
                 text = next >= 0 ? text.Substring(next + 1) : string.Empty;
             }
 
-            return new VoiceMessage(VoiceMessageKind.Heard, text, confidence, source);
+            return new VoiceMessage(kind, text, confidence, source);
         }
 
         private static string SingleLine(string text)

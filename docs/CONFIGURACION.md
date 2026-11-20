@@ -13,7 +13,7 @@ Pulsa **F6** dentro del juego para abrir o cerrar la ventana, que se maneja con 
 - **Recuerdos**: el libro de recuerdos. Elige un nivel a la izquierda y verás intentos, victorias, tiempos y la comparativa P1/P2 de los totales, del **try final** (última victoria) o del último intento. En dorado, quién lleva más.
 - **Totales**: todo lo jugado juntos y los niveles más intentados.
 - **Ruleta**: activar o desactivar cada castigo, su peso y la probabilidad actual para cada jugador según su presión.
-- **Ajustes**: los interruptores principales (reglas, reinicio, límites, agradecimiento, voz, castigos y HUD). Los cambios se guardan al momento.
+- **Ajustes**: los interruptores principales (reglas, reinicio, límites, agradecimiento, voz, castigos y HUD). Los cambios se guardan al momento. En la parte de voz hay un botón para **probar la voz 5 s** y la lista de las **últimas frases oídas**: aceptadas, por debajo de la confianza mínima o no entendidas, con su fuente y confianza, para ajustar `ConfianzaMinima` y `ConfianzaMinimaEscritorio`.
 - **Registro**: los últimos mensajes de Coophead, para ver si se detectan bien muertes, rescates y frases.
 
 El HUD de la esquina sigue funcionando igual durante la partida. Para editar todos los ajustes desde el juego también se puede instalar el mod BepInEx.ConfigurationManager (opcional, se abre con F1).
@@ -124,6 +124,7 @@ Privacidad y limitaciones en `docs/VOZ_Y_PRIVACIDAD.md`.
 | `VentanaSegundos` | `3` | 1–15 |
 | `PalabraObligatoria` | `gracias` | Se ignoran mayúsculas, tildes y signos. |
 | `Apelativos` | `cari, kari, amor` | Separados por comas; valen para ambos jugadores. |
+| `MargenVoz` | `1.5` s | 0–5. Tiempo extra tras el plazo para que el reconocedor entregue una frase dicha a tiempo (tarda en dar el resultado). No se ve en el HUD, que muestra «comprobando la voz…». |
 | `ExigirApelativo` | `false` | Si es `true`, hace falta «gracias» + apelativo. |
 | `RespaldoManual` | `true` | Confirmar con tecla. Sin teclas asignadas cuenta como desactivado. |
 | `TeclaGraciasP1` / `TeclaGraciasP2` | `F7` / `F8` | No verificado que estén libres en tu configuración: cámbialas si chocan. |

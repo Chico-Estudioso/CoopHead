@@ -47,7 +47,7 @@ namespace Coophead.Core.Tests
 
             session.OnPlayerDied(P1, "b", 110f);
             session.OnPlayerRevived(P1, P2, "b", 111f);
-            session.Tick(115f); // se olvida de dar las gracias: castigo doble para P1
+            session.Tick(116f); // se olvida de dar las gracias (plazo 3 s + margen de voz 1,5 s): castigo doble para P1
 
             return session.EndLevel(end, 100f + duration);
         }

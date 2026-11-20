@@ -50,6 +50,9 @@ namespace Coophead.Plugin
 
         public bool Visible { get; set; }
 
+        /// <summary>Lanza una prueba de voz de 5 s (la conecta el plugin).</summary>
+        public Action RequestVoiceTest { get; set; }
+
         /// <summary>Solo desde OnGUI.</summary>
         public void Draw(CoopheadSession currentSession, CoopheadConfig currentConfig, StatsBook currentBook, string currentStatsPath, float userScale)
         {
@@ -319,6 +322,24 @@ namespace Coophead.Plugin
             EnumCycle("7 - Voz", "FuenteVoz", "Fuente (requiere reiniciar el juego)");
             Slider("7 - Voz", "ConfianzaMinima", "Confianza mínima del micrófono", 0.1f, 1f, "0.00");
             Slider("7 - Voz", "ConfianzaMinimaEscritorio", "Confianza mínima del escritorio", 0.1f, 1f, "0.00");
+            Slider("7 - Voz", "RetrasoEscritorio", "Escritorio ignorado al hacer el parry (s, requiere reiniciar)", 0f, 2f, "0.0");
+            Slider(CoopheadSettings.ThanksSection, "MargenVoz", "Margen para que la voz termine de procesar (s)", 0f, 5f, "0.0");
+            if (GUILayout.Button("Probar la voz 5 s (también F9)", GUILayout.Width(300f)) && RequestVoiceTest != null)
+            {
+                RequestVoiceTest();
+            }
+
+            GUILayout.Label("Últimas frases oídas (para ajustar la confianza):", small);
+            string[] heard = VoiceLog.Snapshot();
+            if (heard.Length == 0)
+            {
+                GUILayout.Label("  Nada todavía.", small);
+            }
+
+            foreach (string line in heard)
+            {
+                GUILayout.Label("  " + line, small);
+            }
 
             GUILayout.Space(8f);
             GUILayout.Label("Castigos y HUD", title);

@@ -70,9 +70,10 @@ namespace Coophead.Core.Tests
             Assert.False(config.RequireName);
         }
 
+        /// <summary>Con voz y sin margen de reconocimiento, para comprobar el plazo exacto.</summary>
         private static ThanksWindowTracker VoiceTracker(ThanksConfig config = null)
         {
-            var tracker = new ThanksWindowTracker(config ?? new ThanksConfig());
+            var tracker = new ThanksWindowTracker(config ?? new ThanksConfig { VoiceGraceSeconds = 0f });
             tracker.SetVoiceAvailable(true);
             return tracker;
         }
@@ -113,6 +114,47 @@ namespace Coophead.Core.Tests
 
             tracker.Open(P1, P2, 10f, new List<ThanksWindow>());
             Assert.Null(tracker.OnTranscript("gracias", 13.5f));
+        }
+
+        [Fact]
+        public void UnaFraseDichaATiempoCuentaAunqueElReconocedorTarde()
+        {
+            var tracker = new ThanksWindowTracker(new ThanksConfig { WindowSeconds = 3f, VoiceGraceSeconds = 1.5f });
+            tracker.SetVoiceAvailable(true);
+            ThanksWindow window = tracker.Open(P1, P2, 10f, new List<ThanksWindow>());
+            var resolved = new List<ThanksWindow>();
+
+            tracker.Tick(13.5f, resolved);
+            Assert.Empty(resolved);
+            Assert.Same(window, tracker.OnTranscript("gracias cari", 14.2f));
+            Assert.Equal(ThanksResolution.Thanked, window.Resolution);
+        }
+
+        [Fact]
+        public void ElMargenTieneLimite()
+        {
+            var tracker = new ThanksWindowTracker(new ThanksConfig { WindowSeconds = 3f, VoiceGraceSeconds = 1.5f });
+            tracker.SetVoiceAvailable(true);
+            ThanksWindow window = tracker.Open(P1, P2, 10f, new List<ThanksWindow>());
+            var resolved = new List<ThanksWindow>();
+
+            tracker.Tick(14.5f, resolved);
+
+            Assert.Equal(ThanksResolution.Missed, window.Resolution);
+            Assert.Null(tracker.OnTranscript("gracias", 14.6f));
+        }
+
+        [Fact]
+        public void SinVozNoHayMargen()
+        {
+            var tracker = new ThanksWindowTracker(new ThanksConfig { WindowSeconds = 3f, VoiceGraceSeconds = 1.5f });
+            ThanksWindow window = tracker.Open(P1, P2, 10f, new List<ThanksWindow>());
+            var resolved = new List<ThanksWindow>();
+
+            Assert.Equal(0f, tracker.Grace);
+            tracker.Tick(13f, resolved);
+
+            Assert.Equal(ThanksResolution.Missed, window.Resolution);
         }
 
         [Fact]

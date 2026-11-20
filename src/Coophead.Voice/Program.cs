@@ -163,6 +163,8 @@ namespace Coophead.Voice
                 var builder = new GrammarBuilder(new Choices(ToArray(phrases))) { Culture = recognizer.Culture };
                 var channel = new RecognitionChannel(source, recognizer, new Grammar(builder) { Name = "coophead-gracias-" + source }, minConfidence, loopback);
                 channel.Recognized += OnRecognized;
+                channel.LowConfidence += (c, text, confidence) => Write(VoiceProtocol.FormatLow(confidence, text, c.Source));
+                channel.Rejected += c => Write(VoiceProtocol.FormatRejected(c.Source));
                 channel.Failed += (c, message) => Write(VoiceProtocol.FormatError(c.Source + ": " + message));
                 Channels.Add(channel);
                 active.Add(description);
@@ -199,7 +201,13 @@ namespace Coophead.Voice
             string line;
             while ((line = Console.In.ReadLine()) != null)
             {
-                line = line.Trim();
+                // La primera línea puede traer un BOM invisible del plugin: sin limpiarla, se perdía el primer LISTEN.
+                line = VoiceProtocol.CleanLine(line);
+                if (line.Length == 0)
+                {
+                    continue;
+                }
+
                 if (line == VoiceProtocol.Quit)
                 {
                     return;

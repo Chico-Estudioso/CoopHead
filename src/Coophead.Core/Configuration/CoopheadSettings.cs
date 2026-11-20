@@ -252,6 +252,8 @@ namespace Coophead.Core.Configuration
                 "Palabra que hay que decir. Se ignoran mayúsculas, tildes y signos.");
             var names = binder.Bind(ThanksSection, "Apelativos", string.Join(", ", t.AcceptedNames.ToArray()),
                 "Apelativos separados por comas («cari, kari, amor»). Valen para ambos jugadores y mejoran el reconocimiento.");
+            var grace = binder.BindRange(ThanksSection, "MargenVoz", t.VoiceGraceSeconds, 0f, 5f,
+                "Segundos extra tras el plazo para que el reconocedor termine una frase dicha a tiempo (tarda en dar el resultado). No se ve en el HUD; solo evita castigos injustos.");
             var requireName = binder.Bind(ThanksSection, "ExigirApelativo", t.RequireName,
                 "Si se activa, hace falta «gracias» más uno de los apelativos. Si no, basta con «gracias».");
             var manual = binder.Bind(ThanksSection, "RespaldoManual", t.ManualFallbackEnabled,
@@ -261,6 +263,7 @@ namespace Coophead.Core.Configuration
             {
                 c.Thanks.RequireThanks = require.Value;
                 c.Thanks.WindowSeconds = window.Value;
+                c.Thanks.VoiceGraceSeconds = grace.Value;
                 c.Thanks.RequiredWord = word.Value;
                 c.Thanks.AcceptedNames = ParseList(names.Value);
                 c.Thanks.RequireName = requireName.Value;

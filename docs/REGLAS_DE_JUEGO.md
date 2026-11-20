@@ -41,6 +41,7 @@ En Cuphead el fantasma no caduca. Si sube fuera de cámara, el jugador muerto pu
 - El rescatado tarda unos 2 s en reaparecer. Si el plazo acaba antes de que vuelva a la partida, el castigo se aplica en cuanto reaparece (como mucho, 6 s después); si vuelve a morir antes, no hay castigo. El HUD muestra «sin gracias · castigo al reaparecer».
 - Vale para los dos jugadores. Por defecto basta con que se reconozca **«gracias»** («Gracias, Cari», «Gracias, amor», «muchas gracias»…). Con `RequireName` hace falta además uno de los apelativos configurados (`cari`, `kari`, `amor` por defecto).
 - Se normaliza el texto: sin mayúsculas, tildes ni signos.
+- Con voz activada hay un margen de 1,5 s tras el plazo (`MargenVoz`) para que el reconocedor termine de procesar una frase dicha a tiempo; durante ese margen el HUD muestra «comprobando la voz…».
 - Con un solo micrófono no se distingue quién habla: una frase reconocida cierra la ventana pendiente más antigua.
 - Respaldo manual: una tecla o botón confirma el agradecimiento.
 - Sin castigo cuando no se puede evaluar con justicia: no hay voz ni respaldo manual, hay un fallo técnico, el rescatado vuelve a morir durante la ventana, llega otra reanimación suya o el nivel termina.

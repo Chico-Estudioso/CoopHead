@@ -32,7 +32,7 @@ namespace Coophead.Core.Tests
         [Fact]
         public void ElPlazoCuentaDesdeElParryAunqueElJugadorSigaReapareciendo()
         {
-            var tracker = new ThanksWindowTracker(new ThanksConfig { WindowSeconds = 3f });
+            var tracker = new ThanksWindowTracker(new ThanksConfig { WindowSeconds = 3f, VoiceGraceSeconds = 0f });
             tracker.SetVoiceAvailable(true);
             ThanksWindow window = tracker.Open(P2, P1, 10f, new List<ThanksWindow>(), true);
             var resolved = new List<ThanksWindow>();

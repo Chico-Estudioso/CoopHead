@@ -3,6 +3,15 @@
 Los cambios se documentan en español y se agrupan por versión.
 
 ## Sin publicar
+### Corregido (20/11/2026, falsos negativos de la voz)
+- Margen de voz (`MargenVoz`, 1,5 s): una frase dicha a tiempo cuyo resultado llega tarde ya no se descarta.
+- La primera orden al ayudante de voz llegaba con un BOM invisible y se perdía («Orden desconocida»).
+- El audio del escritorio llegaba con microcortes; ahora se entrega continuo.
+- Las líneas del ayudante ya no arrastran retornos de carro.
+
+### Añadido (20/11/2026)
+- F6 → Ajustes: retraso del escritorio, margen de voz, botón para probar la voz y lista de las últimas frases oídas (aceptadas, dudosas o no entendidas) con fuente y confianza.
+
 ### Corregido (20/11/2026, tras la primera partida real)
 - La voz del escritorio fallaba siempre («El método especificado no es compatible»): el flujo de audio ya no rechaza `Seek`.
 - El castigo por no dar las gracias caía mientras el rescatado aún reaparecía. El plazo sigue contando desde el parry de reanimación, pero el castigo se aplica cuando el jugador vuelve a la partida. El HUD muestra «sin gracias · castigo al reaparecer».
