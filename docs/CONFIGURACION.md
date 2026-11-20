@@ -13,7 +13,7 @@ Pulsa **F6** dentro del juego para abrir o cerrar la ventana, que se maneja con 
 - **Recuerdos**: el libro de recuerdos. Elige un nivel a la izquierda y verás intentos, victorias, tiempos y la comparativa P1/P2 de los totales, del **try final** (última victoria) o del último intento. En dorado, quién lleva más.
 - **Totales**: todo lo jugado juntos y los niveles más intentados.
 - **Ruleta**: activar o desactivar cada castigo, su peso y la probabilidad actual para cada jugador según su presión.
-- **Ajustes**: los interruptores principales (reglas, reinicio, límites, agradecimiento, voz, castigos y HUD). Los cambios se guardan al momento. En la parte de voz hay un botón para **probar la voz 5 s** y la lista de las **últimas frases oídas**: aceptadas, por debajo de la confianza mínima o no entendidas, con su fuente y confianza, para ajustar `ConfianzaMinima` y `ConfianzaMinimaEscritorio`.
+- **Ajustes**: los interruptores principales (reglas, reinicio, límites, agradecimiento, voz, castigos y HUD). Los cambios se guardan al momento. En la parte de voz hay un botón para **probar la voz 5 s** y la lista de las **últimas frases oídas**: aceptadas, por debajo de la confianza mínima o no entendidas, con su fuente y confianza, para ajustar `ConfianzaMinima` y `ConfianzaMinimaEscritorio`. Al terminar la prueba aparece cuánto audio llegó por cada salida del escritorio y a qué volumen.
 - **Registro**: los últimos mensajes de Coophead, para ver si se detectan bien muertes, rescates y frases.
 
 El HUD de la esquina sigue funcionando igual durante la partida. Para editar todos los ajustes desde el juego también se puede instalar el mod BepInEx.ConfigurationManager (opcional, se abre con F1).

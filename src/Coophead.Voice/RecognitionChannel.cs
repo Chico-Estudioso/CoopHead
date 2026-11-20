@@ -14,6 +14,11 @@ namespace Coophead.Voice
         private readonly LoopbackSource loopback;
         private bool running;
         private bool restartRequested;
+        private bool stopRequested = true;
+        private int unexpectedRestarts;
+
+        /// <summary>Reinicios automáticos por escucha si el reconocedor se para sin que nadie lo pida.</summary>
+        private const int MaxUnexpectedRestarts = 3;
 
         public RecognitionChannel(string source, RecognizerInfo recognizer, Grammar grammar, float minConfidence, LoopbackSource loopback)
         {
@@ -81,35 +86,27 @@ namespace Coophead.Voice
 
         public string Source { get; private set; }
 
+        /// <summary>Descripción para el diagnóstico («escritorio1 = Auriculares…»).</summary>
+        public string Description { get; set; }
+
         public float MinConfidence { get; private set; }
+
+        /// <summary>Avisos de diagnóstico (p. ej. el reconocedor dejó de escuchar antes de tiempo).</summary>
+        public event Action<RecognitionChannel, string> Notice;
 
         public void Start()
         {
             lock (gate)
             {
+                stopRequested = false;
+                unexpectedRestarts = 0;
                 if (running)
                 {
                     restartRequested = true;
                     return;
                 }
 
-                if (loopback != null)
-                {
-                    try
-                    {
-                        engine.SetInputToAudioStream(loopback.Start(), LoopbackSource.Format);
-                    }
-                    catch (Exception)
-                    {
-                        // Si el reconocedor no acepta el flujo, no se deja la captura del escritorio encendida.
-                        loopback.Stop();
-                        throw;
-                    }
-                }
-
-                engine.RecognizeAsync(RecognizeMode.Multiple);
-                running = true;
-                restartRequested = false;
+                StartLocked();
             }
         }
 
@@ -117,17 +114,28 @@ namespace Coophead.Voice
         {
             lock (gate)
             {
+                stopRequested = true;
                 restartRequested = false;
+                if (loopback != null)
+                {
+                    // Primero se cierra la tubería: el reconocedor recibe fin de flujo y suelta la lectura en la que
+                    // está esperando, así la cancelación no se queda bloqueada aunque no suene nada.
+                    loopback.Stop();
+                }
+
                 if (running)
                 {
                     engine.RecognizeAsyncCancel();
                 }
             }
+        }
 
-            if (loopback != null)
+        /// <summary>Cuánto audio llegó por la salida del escritorio en la última escucha; null para el micrófono.</summary>
+        public string DescribeActivity()
+        {
+            lock (gate)
             {
-                // Cierra la tubería: el reconocedor recibe fin de flujo y termina aunque no haya sonido.
-                loopback.Stop();
+                return loopback == null ? null : loopback.DescribeActivity();
             }
         }
 
@@ -141,13 +149,61 @@ namespace Coophead.Voice
             }
         }
 
+        private void StartLocked()
+        {
+            if (loopback != null)
+            {
+                try
+                {
+                    engine.SetInputToAudioStream(loopback.Start(), LoopbackSource.Format);
+                }
+                catch (Exception)
+                {
+                    // Si el reconocedor no acepta el flujo, no se deja la captura del escritorio encendida.
+                    loopback.Stop();
+                    throw;
+                }
+            }
+
+            engine.RecognizeAsync(RecognizeMode.Multiple);
+            running = true;
+            restartRequested = false;
+        }
+
         private void OnRecognizeCompleted(object sender, RecognizeCompletedEventArgs e)
         {
-            bool restart;
+            string notice = null;
+            string failure = null;
             lock (gate)
             {
                 running = false;
-                restart = restartRequested;
+                if (!stopRequested && !restartRequested)
+                {
+                    // Nadie pidió parar: el reconocedor se ha quedado sin audio o ha fallado en mitad de la escucha.
+                    string reason = e.InputStreamEnded ? "se le acabó el audio" : "se detuvo solo";
+                    if (unexpectedRestarts < MaxUnexpectedRestarts)
+                    {
+                        unexpectedRestarts++;
+                        restartRequested = true;
+                        notice = "el reconocedor dejó de escuchar antes de tiempo (" + reason + "); se vuelve a poner en marcha.";
+                    }
+                    else
+                    {
+                        notice = "el reconocedor dejó de escuchar antes de tiempo (" + reason + ") varias veces; esta fuente no escucha hasta la próxima ventana.";
+                    }
+                }
+
+                if (restartRequested && !stopRequested)
+                {
+                    try
+                    {
+                        StartLocked();
+                    }
+                    catch (Exception ex)
+                    {
+                        failure = ex.Message;
+                    }
+                }
             }
 
             if (e.Error != null && Failed != null)
@@ -155,9 +211,14 @@ namespace Coophead.Voice
                 Failed(this, e.Error.Message);
             }
 
-            if (restart)
+            if (notice != null && Notice != null)
             {
-                Start();
+                Notice(this, notice);
+            }
+
+            if (failure != null && Failed != null)
+            {
+                Failed(this, failure);
             }
         }
     }

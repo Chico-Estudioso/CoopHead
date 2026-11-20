@@ -10,8 +10,8 @@ using NAudio.Wave.SampleProviders;
 namespace Coophead.Voice
 {
     /// <summary>
-    /// Captura lo que suena por el dispositivo de salida predeterminado de Windows (WASAPI en bucle): por ejemplo,
-    /// la voz de la pareja que llega por Parsec. Convierte el audio a 16 kHz, 16 bits, mono para el reconocedor.
+    /// Captura lo que suena por una salida de audio de Windows (WASAPI en bucle): por ejemplo, la voz de la pareja
+    /// que llega por Discord o Parsec. Convierte el audio a 16 kHz, 16 bits, mono para el reconocedor.
     /// Solo captura entre <see cref="Start"/> y <see cref="Stop"/>; no guarda nada.
     /// </summary>
     internal sealed class LoopbackSource : IDisposable
@@ -30,6 +30,10 @@ namespace Coophead.Voice
         private AudioPipeStream pipe;
         private Thread pump;
         private volatile bool pumping;
+
+        // Diagnóstico de la última escucha: cuánto audio llegó por esta salida y a qué volumen máximo. No se guarda audio.
+        private long receivedBytes;
+        private int peakSample;
 
         /// <param name="ignoreInitialMilliseconds">
         /// Silencio inicial: al abrirse la ventana suena el efecto de reanimación del juego, que no debe confundirse
@@ -144,6 +148,8 @@ namespace Coophead.Voice
 
             pcm16 = new SampleToWaveProvider16(samples);
             pipe = new AudioPipeStream();
+            receivedBytes = 0;
+            peakSample = 0;
             capture.StartRecording();
 
             pumping = true;
@@ -189,6 +195,24 @@ namespace Coophead.Voice
         }
 
         /// <summary>
+        /// Resumen de la última escucha, para saber por qué salida suena la voz de la pareja (p. ej. Discord). Leer
+        /// después de <see cref="Stop"/>.
+        /// </summary>
+        public string DescribeActivity()
+        {
+            if (receivedBytes == 0)
+            {
+                return "no llegó audio (no sonaba nada por esta salida)";
+            }
+
+            int percent = (int)Math.Round(peakSample * 100.0 / 32768.0);
+            string seconds = (receivedBytes / (double)(BytesPerMillisecond * 1000)).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+            return percent < 1
+                ? "llegó audio " + seconds + " s, pero en silencio"
+                : "llegó audio " + seconds + " s · volumen máximo " + percent + " %";
+        }
+
+        /// <summary>
         /// Entrega el audio tal como llega, sin huecos. Si el escritorio deja de enviar (no suena nada), añade silencio al
         /// ritmo del reloj para que el reconocedor pueda cerrar una frase aunque después no haya más sonido.
         /// </summary>
@@ -203,6 +227,7 @@ namespace Coophead.Voice
                 long now = clock.ElapsedMilliseconds;
                 if (read > 0)
                 {
+                    Measure(chunk, read);
                     if (now < ignoreInitialMilliseconds)
                     {
                         Array.Clear(chunk, 0, read);
@@ -223,6 +248,19 @@ namespace Coophead.Voice
                 }
 
                 Thread.Sleep(10);
+            }
+        }
+
+        private void Measure(byte[] pcm, int length)
+        {
+            receivedBytes += length;
+            for (int i = 0; i + 1 < length; i += 2)
+            {
+                int sample = Math.Abs((int)(short)(pcm[i] | (pcm[i + 1] << 8)));
+                if (sample > peakSample)
+                {
+                    peakSample = sample;
+                }
             }
         }
 

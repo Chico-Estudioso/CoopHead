@@ -52,7 +52,7 @@ Ruleta, director de equilibrio y programador de efectos implementados y probados
 - Resultado: ninguna combinación deja al jugador bloqueado; todos los efectos se restauran.
 
 ## M5 — Reconocimiento de voz local 🟡
-Ventanas, coincidencia de frase y respaldo manual implementados. Motor elegido: reconocedor de Windows en un proceso auxiliar con gramática cerrada (experimental, desactivado por defecto), con prueba de micrófono. Falta probarlo en un equipo real y medir falsos positivos y negativos.
+Ventanas, coincidencia de frase y respaldo manual implementados. Motor elegido: reconocedor de Windows en un proceso auxiliar con gramática cerrada (experimental, desactivado por defecto), con prueba de micrófono. Probado en el equipo real: el micrófono reconoce; la voz de la pareja por el escritorio (Discord) aún no se ha reconocido nunca. El 20/11/2026 se corrigió la causa probable (lecturas cortas que el reconocedor tomaba como fin del audio). Falta verificarlo y medir falsos positivos y negativos.
 
 - Confirmar requisitos de privacidad y tolerancia a modelos locales.
 - Selección de micrófono y prueba de entrada.
