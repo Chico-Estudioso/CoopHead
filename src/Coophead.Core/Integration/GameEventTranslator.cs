@@ -84,6 +84,13 @@ namespace Coophead.Core.Integration
         /// <param name="now">Reloj del juego; NaN si se desconoce.</param>
         public void LevelEnded(LevelEndReason reason, string source, int levelInstanceId, float now)
         {
+            LevelSessionState current = session.Rules.Session;
+            if (current == null || !current.IsActive)
+            {
+                // Es normal: tras ganar o perder, el nivel se destruye después. No hay nada que cerrar.
+                return;
+            }
+
             if (levelInstanceId != 0 && currentLevelInstance != 0 && levelInstanceId != currentLevelInstance)
             {
                 Trace("Fin de una instancia de nivel anterior (" + levelInstanceId + ") vía " + source + ": se ignora");
@@ -133,7 +140,8 @@ namespace Coophead.Core.Integration
                 return;
             }
 
-            ReviveResult result = session.OnPlayerRevived(rescued, rescuer, GhostKey(ghostInstanceId), now);
+            // El parry ocurre antes de que el rescatado reaparezca: el plazo de las gracias empieza al confirmarlo el juego.
+            ReviveResult result = session.OnPlayerRevived(rescued, rescuer, GhostKey(ghostInstanceId), now, true);
             Report("Rescate de " + rescued.Label() + " por " + rescuer.Label(), result.Status, result.IgnoredReason);
         }
 
@@ -156,7 +164,7 @@ namespace Coophead.Core.Integration
                 return;
             }
 
-            session.OnPlayerRevivedWithoutRescue(slot, slot.Label() + "@" + frame, now);
+            session.OnPlayerBackInGame(slot, slot.Label() + "@" + frame, now);
         }
 
         // --- Estadísticas de combate. El daño llega muy a menudo: no se escribe en el log. ---

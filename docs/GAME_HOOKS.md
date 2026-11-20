@@ -6,6 +6,10 @@ Estados: `Candidato` (visto en código comunitario), `Presente (1.3.4)` (el tipo
 
 Prueba de carga del 19/11/2026 en Cuphead 1.3.4: los 9 hooks instrumentados se resolvieron e instalaron (`docs/pruebas/2026-11-19-carga-1.3.4.md`).
 
+Partida real del 20/11/2026 (Flower, 9 intentos): los hooks marcados `Verificado (1.3.4)` se dispararon una vez por evento y con el jugador correcto (`docs/pruebas/2026-11-20-partida-flower.md`). Sin ver todavía: `Level.OnWin` (no hubo victoria), `ReviveOutOfFrame` (no hubo robo de corazón) y `OnEx`.
+
+**Orden observado**: el parry (`OnParryPrePause`) llega más de 2 s antes de que el juego confirme la reaparición (`PlayerStatsManager.OnRevive`). Por eso el plazo para dar las gracias empieza al confirmarse la reaparición.
+
 ## Origen de la evidencia
 - **Cuphead 3-Player Co-op** (Meloon33, licencia MIT): plugin BepInEx 5 que parchea estos métodos con Harmony. Es la referencia principal.
 - **Cuphead.DebugMod** (DemoJameson, sin licencia publicada): plugin BepInEx 5 con target `net35`; configuraciones distintas para Cuphead 1.0–1.1, 1.2 y 1.3+.
@@ -16,33 +20,33 @@ Los proyectos sin licencia se usan solo como lectura; nada de su código entra e
 ## Identificación de jugadores
 | Elemento | Detalle | Estado |
 |---|---|---|
-| `PlayerId` (enum) | `PlayerOne`, `PlayerTwo`, `Any`, `None` | Candidato |
-| `PlayerManager.GetPlayer(PlayerId)` | Devuelve `AbstractPlayerController` | `Presente (1.3.4)` |
-| `AbstractPlayerController.id` | `PlayerId` del jugador | Candidato |
-| `PlayerStatsManager.basePlayer` | Controlador dueño de las estadísticas | Candidato |
+| `PlayerId` (enum) | `PlayerOne`, `PlayerTwo`, `Any`, `None` | `Verificado (1.3.4)` |
+| `PlayerManager.GetPlayer(PlayerId)` | Devuelve `AbstractPlayerController` | `Verificado (1.3.4)` |
+| `AbstractPlayerController.id` | `PlayerId` del jugador | `Verificado (1.3.4)` |
+| `PlayerStatsManager.basePlayer` | Controlador dueño de las estadísticas | `Verificado (1.3.4)` |
 
 Mapeo previsto: `PlayerId.PlayerOne` → `PlayerSlot.PlayerOne`, `PlayerId.PlayerTwo` → `PlayerSlot.PlayerTwo`; cualquier otro valor se descarta. Hay que comprobar en M2 que el índice no cambia al reconectar mandos.
 
 ## Ciclo de nivel
 | Hook | Uso en Coophead | Estado |
 |---|---|---|
-| `Level.Awake` (postfix) | `StartLevel`: nuevo intento, contadores a cero | `Presente (1.3.4)` |
+| `Level.Awake` (postfix) | `StartLevel`: nuevo intento, contadores a cero | `Verificado (1.3.4)` |
 | `Level.OnWin` (postfix) | `EndLevel(Won)` | `Presente (1.3.4)` |
-| `Level._OnLose` | `EndLevel(Lost)`; ambos muertos | `Presente (1.3.4)` |
-| `Level.OnDestroy` | `EndLevel(Exited)` | `Presente (1.3.4)` |
-| `SceneLoader.ReloadLevel()` | Vía de reinicio del nivel | Candidato |
+| `Level._OnLose` | `EndLevel(Lost)`; ambos muertos | `Verificado (1.3.4)` |
+| `Level.OnDestroy` | `EndLevel(Exited)` | `Verificado (1.3.4)` |
+| `SceneLoader.ReloadLevel()` | Vía de reinicio del nivel | `Verificado (1.3.4)` |
 | `LevelGameOverGUI.Retry` | Reintento desde la pantalla de derrota | Candidato |
 | `Level.LevelType`, `Level.IsDicePalace`, `Level.IsChessBoss`, `PlatformingLevel` | Distinguir jefes, plataformas y tutorial | Candidato |
 
 ## Muerte, fantasma y reanimación
 | Hook | Firma observada | Uso en Coophead | Estado |
 |---|---|---|---|
-| `Level.OnPlayerDeath` (privado) | `(DeathEvent e)`, `e.playerId` | Diagnóstico | `Presente (1.3.4)` |
-| `PlayerDeathEffect.Start` | Aparición del fantasma; campo privado `playerId` | `OnPlayerDied` con clave por instancia | `Presente (1.3.4)` |
-| `PlayerDeathParrySwitch.OnParryPrePause` | `(AbstractPlayerController player)`: quien hace parry | `OnPlayerRevived` con rescatador = `player.id` y rescatado = `playerId` del `PlayerDeathEffect` padre | `Presente (1.3.4)` |
+| `Level.OnPlayerDeath` (privado) | `(DeathEvent e)`, `e.playerId` | Diagnóstico | `Verificado (1.3.4)` |
+| `PlayerDeathEffect.Start` | Aparición del fantasma; campo privado `playerId` | `OnPlayerDied` con clave por instancia | `Verificado (1.3.4)` |
+| `PlayerDeathParrySwitch.OnParryPrePause` | `(AbstractPlayerController player)`: quien hace parry | `OnPlayerRevived` con rescatador = `player.id` y rescatado = `playerId` del `PlayerDeathEffect` padre | `Verificado (1.3.4)` |
 | `PlayerDeathEffect.OnParrySwitch` | Marca `exiting = true` y lanza la animación de rescate | Alternativa para confirmar el rescate por parry | Candidato |
 | `PlayerDeathEffect.ReviveOutOfFrame` | Robo de corazón fuera de cámara | **No contar como rescate** (ADR-004) | `Presente (1.3.4)` |
-| `PlayerStatsManager.OnRevive` | Se dispara en ambos tipos de reanimación | Marca vivo sin contar | `Presente (1.3.4)` |
+| `PlayerStatsManager.OnRevive` | Se dispara en ambos tipos de reanimación | Marca vivo sin contar | `Verificado (1.3.4)` |
 | `PlayerStatsManager.PartnerCanSteal` | `Health > 1` | Diagnóstico | Candidato |
 
 ### Lo que dice la evidencia sobre el fantasma
@@ -54,10 +58,10 @@ Mapeo previsto: `PlayerId.PlayerOne` → `PlayerSlot.PlayerOne`, `PlayerId.Playe
 ## Estadísticas de combate
 | Hook | Lectura | Uso | Estado |
 |---|---|---|---|
-| `DamageDealer.DealDamage` (postfix) | `__result` (daño) y `PlayerId`, o `DamageDealer.lastPlayer` | Daño infligido | Candidato |
-| `PlayerStatsManager.OnParry` | `basePlayer.id` | Parrys | Candidato |
-| `PlayerStatsManager.OnSuper` / `OnEx` | `basePlayer.id` | Súper y EX | Candidato |
-| `PlayerStatsManager.TakeDamage` (prefijo + postfix) | `Health` antes y después | Golpes que quitan vida | Candidato |
+| `DamageDealer.DealDamage` (postfix) | `__result` (daño) y `PlayerId`, o `DamageDealer.lastPlayer` | Daño infligido | `Verificado (1.3.4)` |
+| `PlayerStatsManager.OnParry` | `basePlayer.id` | Parrys | `Verificado (1.3.4)` |
+| `PlayerStatsManager.OnSuper` / `OnEx` | `basePlayer.id` | Súper y EX | `Verificado (1.3.4)` OnSuper; OnEx sin ver aún |
+| `PlayerStatsManager.TakeDamage` (prefijo + postfix) | `Health` antes y después | Golpes que quitan vida | `Verificado (1.3.4)` |
 
 Origen: Cuphead 3-Player Co-op (MIT). Solo leen datos; el de daño no escribe en el log porque se llama con cada impacto.
 
@@ -66,9 +70,9 @@ Implementados en `src/Coophead.Plugin/GameIntegration/GameEffectsApplier.cs`, re
 
 | Efecto | Miembros usados | Restauración | Estado |
 |---|---|---|---|
-| Controles invertidos | `PlayerManager.GetPlayer(PlayerId)` → `stats` → `PlayerStatsManager.ReverseTime` | Se pone a 0. Además el propio juego lo descuenta, así que caduca solo aunque fallara la restauración | `Presente (1.3.4)` |
-| Movimiento lento | `LevelPlayerController.motor` → `LevelPlayerMotor.properties.moveSpeed` (490 en la referencia) | Valor original exacto, guardado por objeto y con contador | Tipo presente (1.3.4); el campo se resuelve al aplicar |
-| Dash limitado | `LevelPlayerMotor.properties.dashTime` (0,3 s en la referencia) | Valor original exacto | Tipo presente (1.3.4); el campo se resuelve al aplicar |
+| Controles invertidos | `PlayerManager.GetPlayer(PlayerId)` → `stats` → `PlayerStatsManager.ReverseTime` | Se pone a 0. Además el propio juego lo descuenta, así que caduca solo aunque fallara la restauración | `Verificado (1.3.4)` |
+| Movimiento lento | `LevelPlayerController.motor` → `LevelPlayerMotor.properties.moveSpeed` (490 en la referencia) | Valor original exacto, guardado por objeto y con contador | `Verificado (1.3.4)` |
+| Dash limitado | `LevelPlayerMotor.properties.dashTime` (0,3 s en la referencia) | Valor original exacto | `Verificado (1.3.4)` |
 | Disparo lento | Sin vía segura identificada (la cadencia depende de cada arma) | — | No compatible: se quita de la ruleta al activar `AplicarEfectos` |
 
 - `ReverseTime` es el mecanismo de inversión que ya usa el juego: en la referencia solo invierte el eje horizontal al caminar dentro del nivel, no menús ni pausa.
@@ -76,7 +80,7 @@ Implementados en `src/Coophead.Plugin/GameIntegration/GameEffectsApplier.cs`, re
 - Si `AplicarEfectos` está desactivado, la ruleta funciona igual pero los efectos se **simulan**: el HUD los muestra con «(simulado)».
 
 ## Reinicio de nivel
-Con `ReinicioAutomatico = true`, al alcanzar un límite se llama a `SceneLoader.ReloadLevel()` en el siguiente `Update` (nunca dentro de un hook). Si el método no existe, solo se avisa. Estado: Candidato.
+Con `ReinicioAutomatico = true`, al alcanzar un límite se llama a `SceneLoader.ReloadLevel()` en el siguiente `Update` (nunca dentro de un hook). Si el método no existe, solo se avisa. Estado: `Verificado (1.3.4)` (partida del 20/11/2026: al llegar P2 a 3 reanimaciones el nivel se reinició).
 
 ## Instrumentación implementada
 `src/Coophead.Plugin/GameIntegration/GameHooks.cs` instala estos hooks al arrancar, **resolviéndolos por nombre** (Coophead no compila contra `Assembly-CSharp`):

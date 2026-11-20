@@ -59,7 +59,16 @@ namespace Coophead.Voice
 
                 if (loopback != null)
                 {
-                    engine.SetInputToAudioStream(loopback.Start(), LoopbackSource.Format);
+                    try
+                    {
+                        engine.SetInputToAudioStream(loopback.Start(), LoopbackSource.Format);
+                    }
+                    catch (Exception)
+                    {
+                        // Si el reconocedor no acepta el flujo, no se deja la captura del escritorio encendida.
+                        loopback.Stop();
+                        throw;
+                    }
                 }
 
                 engine.RecognizeAsync(RecognizeMode.Multiple);

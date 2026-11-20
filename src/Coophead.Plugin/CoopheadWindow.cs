@@ -150,7 +150,8 @@ namespace Coophead.Plugin
             GUILayout.Label("Equipo: " + state.TeamRevives + " reanimaciones" + (coreConfig.Rules.TeamReviveLimit > 0 ? " de " + coreConfig.Rules.TeamReviveLimit : string.Empty), rich);
             foreach (ThanksWindow window in session.Thanks.Pending)
             {
-                GUILayout.Label(Colored(window.Rescued.Label() + ": ¡da las gracias! " + window.Remaining(Time.time).ToString("0.0", Invariant) + " s"), rich);
+                string left = window.AwaitingRevive ? "(reapareciendo…)" : window.Remaining(Time.time).ToString("0.0", Invariant) + " s";
+                GUILayout.Label(Colored(window.Rescued.Label() + ": ¡da las gracias! " + left), rich);
             }
 
             foreach (ActivePenalty penalty in session.Penalties.Active)
