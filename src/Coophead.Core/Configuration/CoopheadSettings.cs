@@ -247,7 +247,7 @@ namespace Coophead.Core.Configuration
             var require = binder.Bind(ThanksSection, "ExigirAgradecimiento", t.RequireThanks,
                 "Tras un rescate hay que dar las gracias o se tira la ruleta. Si se desactiva, no hay ventana ni ruleta.");
             var window = binder.BindRange(ThanksSection, "VentanaSegundos", t.WindowSeconds, 1f, 15f,
-                "Segundos para dar las gracias desde la reanimación.");
+                "Segundos para dar las gracias, contados desde el parry de reanimación.");
             var word = binder.Bind(ThanksSection, "PalabraObligatoria", t.RequiredWord,
                 "Palabra que hay que decir. Se ignoran mayúsculas, tildes y signos.");
             var names = binder.Bind(ThanksSection, "Apelativos", string.Join(", ", t.AcceptedNames.ToArray()),

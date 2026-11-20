@@ -19,7 +19,7 @@
 
 ## Fallos encontrados y corrección
 1. **Voz del escritorio**: `AudioPipeStream.Seek` lanzaba `NotSupportedException` y `System.Speech` no aceptaba el flujo. Ahora `Seek` y `SetLength` no hacen nada y, si el reconocedor rechaza el flujo, se apaga la captura.
-2. **Momento de la ventana**: el parry llega más de 2 s antes de que el juego confirme la reaparición. Ahora la ventana se abre con el parry (se puede dar las gracias desde ese momento), pero el plazo empieza al confirmarse la reaparición (`PlayerStatsManager.OnRevive`), con una espera máxima de 6 s. El castigo nunca llega mientras el jugador reaparece.
+2. **Momento del castigo**: el parry llega más de 2 s antes de que el juego confirme la reaparición. El plazo para dar las gracias sigue contando desde el parry (regla del usuario), pero si se agota mientras el rescatado reaparece, el castigo espera a que vuelva (`PlayerStatsManager.OnRevive`), con una espera máxima de 6 s. El castigo nunca se pierde durante la animación.
 3. El `Level.OnDestroy` que llega después de ganar o perder ya no escribe un «Nivel terminado (Exited)» confuso.
 
 ## Observación sin cambiar

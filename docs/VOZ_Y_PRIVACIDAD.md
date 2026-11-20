@@ -32,7 +32,7 @@ No incluir modelos grandes dentro del repositorio. El modelo se instalará local
 - **Escritorio**: lo que suena por la salida de audio predeterminada del PC (WASAPI en bucle, con NAudio). Sirve para jugar por **Parsec**: la voz de tu pareja llega al PC anfitrión por los altavoces o cascos y se reconoce ahí.
 - **Ambos** (por defecto): un reconocedor por fuente. Si la misma frase llega por las dos en menos de 1 s (por ejemplo, la voz de los altavoces entra también por el micrófono), cuenta una sola vez.
 
-La fuente del escritorio también oye el juego: por eso tiene su propia `ConfianzaMinimaEscritorio` (0,6) y se ignora durante los primeros `RetrasoEscritorio` segundos (0,8 s), cuando suena el efecto de reanimación del juego. Con la latencia de Parsec puede convenir subir `VentanaSegundos` a 4.
+La fuente del escritorio también oye el juego: por eso tiene su propia `ConfianzaMinimaEscritorio` (0,6) y se ignora durante los primeros `RetrasoEscritorio` segundos (0,3 s), cuando suena el efecto de reanimación del juego. Es corto para que un «gracias» dicho justo al hacer el parry cuente. Con la latencia de Parsec puede convenir subir `VentanaSegundos` a 4.
 
 ### Garantías de privacidad
 - Solo escucha entre la apertura y el cierre de una ventana de agradecimiento, o durante la prueba de micrófono (F9, 5 s). Esto vale para las dos fuentes: el audio del escritorio tampoco se captura fuera de esos momentos.

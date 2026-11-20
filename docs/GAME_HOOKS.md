@@ -8,7 +8,7 @@ Prueba de carga del 19/11/2026 en Cuphead 1.3.4: los 9 hooks instrumentados se r
 
 Partida real del 20/11/2026 (Flower, 9 intentos): los hooks marcados `Verificado (1.3.4)` se dispararon una vez por evento y con el jugador correcto (`docs/pruebas/2026-11-20-partida-flower.md`). Sin ver todavía: `Level.OnWin` (no hubo victoria), `ReviveOutOfFrame` (no hubo robo de corazón) y `OnEx`.
 
-**Orden observado**: el parry (`OnParryPrePause`) llega más de 2 s antes de que el juego confirme la reaparición (`PlayerStatsManager.OnRevive`). Por eso el plazo para dar las gracias empieza al confirmarse la reaparición.
+**Orden observado**: el parry (`OnParryPrePause`) llega más de 2 s antes de que el juego confirme la reaparición (`PlayerStatsManager.OnRevive`). El plazo para dar las gracias cuenta desde el parry, pero si falta el agradecimiento el castigo se aplica al confirmarse la reaparición.
 
 ## Origen de la evidencia
 - **Cuphead 3-Player Co-op** (Meloon33, licencia MIT): plugin BepInEx 5 que parchea estos métodos con Harmony. Es la referencia principal.
