@@ -71,6 +71,7 @@ namespace Coophead.Core.Voice
         public const string Stop = "STOP";
         public const string Quit = "QUIT";
         public const string TestPrefix = "TEST";
+        public const string ConfidencePrefix = "CONFIDENCE";
 
         // Mensajes del ayudante al plugin.
         public const string Ready = "READY";
@@ -94,6 +95,39 @@ namespace Coophead.Core.Voice
         {
             float clamped = Math.Max(1f, Math.Min(MaxTestSeconds, seconds));
             return TestPrefix + " " + clamped.ToString("0.#", CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// «CONFIDENCE 0.60 0.50»: confianza mínima del micrófono y del escritorio. Se envía al cambiarla en F6 o en la
+        /// configuración, para que se aplique sin reiniciar el juego.
+        /// </summary>
+        public static string Confidence(float microphone, float desktop)
+        {
+            return ConfidencePrefix + " " + ClampConfidence(microphone).ToString("0.00", CultureInfo.InvariantCulture)
+                + " " + ClampConfidence(desktop).ToString("0.00", CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>Lee una orden CONFIDENCE; false si la línea no lo es o no tiene dos números válidos.</summary>
+        public static bool TryParseConfidence(string line, out float microphone, out float desktop)
+        {
+            microphone = 0f;
+            desktop = 0f;
+            if (line == null || !line.StartsWith(ConfidencePrefix + " ", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            string[] parts = line.Substring(ConfidencePrefix.Length + 1).Split(' ');
+            if (parts.Length != 2
+                || !float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out microphone)
+                || !float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out desktop))
+            {
+                return false;
+            }
+
+            microphone = ClampConfidence(microphone);
+            desktop = ClampConfidence(desktop);
+            return true;
         }
 
         /// <summary>Segundos de una orden TEST; null si la línea no es una orden TEST válida.</summary>
@@ -332,6 +366,16 @@ namespace Coophead.Core.Voice
             }
 
             return new VoiceMessage(kind, text, confidence, source);
+        }
+
+        private static float ClampConfidence(float value)
+        {
+            if (float.IsNaN(value))
+            {
+                return 1f;
+            }
+
+            return Math.Max(0.05f, Math.Min(1f, value));
         }
 
         private static string SingleLine(string text)

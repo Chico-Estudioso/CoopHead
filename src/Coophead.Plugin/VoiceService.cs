@@ -37,7 +37,7 @@ namespace Coophead.Plugin
 
             public float DesktopDelaySeconds { get; set; }
 
-            /// <summary>«todos», «predeterminado» o parte del nombre de una salida de audio.</summary>
+            /// <summary>«predeterminado», «todos» o parte del nombre de una salida de audio.</summary>
             public string DesktopDevices { get; set; }
         }
 
@@ -223,7 +223,7 @@ namespace Coophead.Plugin
                 }
             }
 
-            return builder.Length == 0 ? "todos" : builder.ToString();
+            return builder.Length == 0 ? "predeterminado" : builder.ToString();
         }
 
         /// <summary>Solo letras y guiones («es-ES»); cualquier otra cosa vuelve al valor por defecto.</summary>
