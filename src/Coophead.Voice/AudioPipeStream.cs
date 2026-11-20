@@ -109,14 +109,15 @@ namespace Coophead.Voice
         {
         }
 
+        // System.Speech llama a Seek y SetLength al preparar la entrada: en un flujo en vivo no tienen sentido, pero
+        // lanzar NotSupportedException hace que SetInputToAudioStream falle («El método especificado no es compatible»).
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotSupportedException();
+            return 0L;
         }
 
         public override void SetLength(long value)
         {
-            throw new NotSupportedException();
         }
     }
 }

@@ -131,6 +131,19 @@ namespace Coophead.Core
 
         public ReviveResult OnPlayerRevived(PlayerSlot rescued, PlayerSlot rescuer, string eventKey, float now)
         {
+            return OnPlayerRevived(rescued, rescuer, eventKey, now, false);
+        }
+
+        /// <param name="rescued">Jugador rescatado.</param>
+        /// <param name="rescuer">Jugador que rescata.</param>
+        /// <param name="eventKey">Clave única del rescate (la del fantasma).</param>
+        /// <param name="now">Reloj del juego.</param>
+        /// <param name="awaitingRevive">
+        /// true si el rescatado todavía tiene que reaparecer (animación del juego). La ventana de agradecimiento se abre ya,
+        /// pero su plazo empieza con <see cref="OnPlayerBackInGame"/>, para no castigar a nadie que aún no ha vuelto.
+        /// </param>
+        public ReviveResult OnPlayerRevived(PlayerSlot rescued, PlayerSlot rescuer, string eventKey, float now, bool awaitingRevive)
+        {
             ReviveResult result = rules.OnPlayerRevived(rescued, rescuer, eventKey);
             if (result.Status != EventStatus.Applied)
             {
@@ -145,7 +158,7 @@ namespace Coophead.Core
             }
 
             var resolved = new List<ThanksWindow>();
-            ThanksWindow window = thanks.Open(rescued, rescuer, now, resolved);
+            ThanksWindow window = thanks.Open(rescued, rescuer, now, resolved, awaitingRevive);
             RaiseClosed(resolved);
             if (window != null)
             {
@@ -153,6 +166,16 @@ namespace Coophead.Core
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// El juego confirma que el jugador ha vuelto a la partida: empieza el plazo de su ventana de agradecimiento y, si
+        /// volvió sin rescate (robo de corazón), se marca como vivo sin contar nada.
+        /// </summary>
+        public void OnPlayerBackInGame(PlayerSlot player, string eventKey, float now)
+        {
+            thanks.ConfirmRevive(player, now);
+            rules.OnPlayerRevivedWithoutRescue(player, eventKey);
         }
 
         /// <summary>Vuelta a la partida sin rescate (robo de corazón u otra vía): no cuenta ni abre ventana.</summary>

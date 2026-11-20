@@ -3,6 +3,14 @@
 Los cambios se documentan en español y se agrupan por versión.
 
 ## Sin publicar
+### Corregido (20/11/2026, tras la primera partida real)
+- La voz del escritorio fallaba siempre («El método especificado no es compatible»): el flujo de audio ya no rechaza `Seek`.
+- La ventana de agradecimiento caducaba y castigaba antes de que el rescatado reapareciera: el plazo empieza ahora cuando el juego confirma la reaparición (se puede dar las gracias desde el parry).
+- El HUD y la ventana muestran «(reapareciendo…)» mientras tanto.
+
+### Verificado (20/11/2026)
+- Partida real en Flower: muertes, rescates, golpes, parrys, súper, daño, límite individual con reinicio y castigos reales funcionan (`docs/pruebas/2026-11-20-partida-flower.md`).
+
 ### Añadido (19/11/2026)
 - Ventana de Coophead dentro del juego (F6, con ratón): partida en directo, libro de recuerdos con el try final y comparativa P1/P2, totales, ruleta editable con probabilidades actuales, ajustes principales y registro.
 - Estadísticas acumulativas: daño infligido, parrys, súper, EX, golpes recibidos, gracias por voz y con tecla, castigos por efecto y castigos dobles, además de las reglas. Libro de recuerdos por nivel en `BepInEx/config/Coophead/estadisticas.json` con intentos, victorias, mejor tiempo, totales y el último intento ganado (`docs/ESTADISTICAS.md`).
