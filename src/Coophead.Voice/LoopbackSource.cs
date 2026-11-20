@@ -18,6 +18,9 @@ namespace Coophead.Voice
         private const int BytesPerMillisecond = 32; // 16000 muestras/s × 2 bytes.
         private const int ChunkBytes = 3200; // 100 ms.
 
+        /// <summary>Si el escritorio deja de enviar audio (no suena nada), se rellena con silencio a partir de este tiempo.</summary>
+        private const int SilenceAfterMilliseconds = 120;
+
         private readonly int ignoreInitialMilliseconds;
         private WasapiLoopbackCapture capture;
         private BufferedWaveProvider buffer;
@@ -58,8 +61,10 @@ namespace Coophead.Voice
             buffer = new BufferedWaveProvider(format)
             {
                 DiscardOnBufferOverflow = true,
-                BufferDuration = TimeSpan.FromSeconds(3),
-                ReadFully = true,
+                BufferDuration = TimeSpan.FromSeconds(5),
+                // Solo se entrega lo que ha llegado de verdad: antes se rellenaba con ceros cada lectura y la voz llegaba
+                // al reconocedor con microcortes dentro de las palabras.
+                ReadFully = false,
             };
             capture.DataAvailable += (sender, e) => buffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
 
@@ -121,35 +126,40 @@ namespace Coophead.Voice
         }
 
         /// <summary>
-        /// Entrega el audio al ritmo del reloj real. Cuando no suena nada, el búfer devuelve silencio, así el
-        /// reconocedor puede cerrar una frase aunque después no haya más sonido.
+        /// Entrega el audio tal como llega, sin huecos. Si el escritorio deja de enviar (no suena nada), añade silencio al
+        /// ritmo del reloj para que el reconocedor pueda cerrar una frase aunque después no haya más sonido.
         /// </summary>
         private void Pump()
         {
             var clock = Stopwatch.StartNew();
             var chunk = new byte[ChunkBytes];
-            long sent = 0;
+            long lastWrite = 0;
             while (pumping)
             {
-                long due = clock.ElapsedMilliseconds * BytesPerMillisecond;
-                while (pumping && sent + ChunkBytes <= due)
+                int read = pcm16.Read(chunk, 0, ChunkBytes);
+                long now = clock.ElapsedMilliseconds;
+                if (read > 0)
                 {
-                    int read = pcm16.Read(chunk, 0, ChunkBytes);
-                    if (clock.ElapsedMilliseconds < ignoreInitialMilliseconds)
+                    if (now < ignoreInitialMilliseconds)
                     {
-                        Array.Clear(chunk, 0, chunk.Length);
-                        read = ChunkBytes;
+                        Array.Clear(chunk, 0, read);
                     }
 
-                    if (read > 0)
-                    {
-                        pipe.Write(chunk, 0, read);
-                    }
-
-                    sent += ChunkBytes;
+                    pipe.Write(chunk, 0, read);
+                    lastWrite = now;
+                    continue;
                 }
 
-                Thread.Sleep(20);
+                if (now - lastWrite >= SilenceAfterMilliseconds)
+                {
+                    int bytes = (int)Math.Min(ChunkBytes, (now - lastWrite) * BytesPerMillisecond);
+                    bytes -= bytes % 2;
+                    Array.Clear(chunk, 0, bytes);
+                    pipe.Write(chunk, 0, bytes);
+                    lastWrite = now;
+                }
+
+                Thread.Sleep(10);
             }
         }
 

@@ -32,6 +32,38 @@ namespace Coophead.Core.Tests
         }
 
         [Fact]
+        public void FrasesDudosasYNoEntendidas()
+        {
+            VoiceMessage low = VoiceProtocol.Parse(VoiceProtocol.FormatLow(0.41f, "gracias cari", "escritorio"));
+            VoiceMessage rejected = VoiceProtocol.Parse(VoiceProtocol.FormatRejected("mic"));
+
+            Assert.Equal(VoiceMessageKind.Low, low.Kind);
+            Assert.Equal(0.41f, low.Confidence, 3);
+            Assert.Equal("escritorio", low.Source);
+            Assert.Equal("gracias cari", low.Text);
+            Assert.Equal(VoiceMessageKind.Rejected, rejected.Kind);
+            Assert.Equal("mic", rejected.Source);
+        }
+
+        [Theory]
+        [InlineData("\uFEFFLISTEN", "LISTEN")]
+        [InlineData("LISTEN\r", "LISTEN")]
+        [InlineData("  STOP \r\n", "STOP")]
+        [InlineData(null, "")]
+        public void LimpiaBomYRetornosDeCarro(string raw, string expected)
+        {
+            Assert.Equal(expected, VoiceProtocol.CleanLine(raw));
+        }
+
+        [Fact]
+        public void ElTextoReconocidoNoArrastraElRetornoDeCarro()
+        {
+            VoiceMessage message = VoiceProtocol.Parse("HEARD 0.67 mic gracias cari\r");
+
+            Assert.Equal("gracias cari", message.Text);
+        }
+
+        [Fact]
         public void HeardSinFuenteSigueFuncionando()
         {
             VoiceMessage message = VoiceProtocol.Parse("HEARD 0.70 gracias micro");

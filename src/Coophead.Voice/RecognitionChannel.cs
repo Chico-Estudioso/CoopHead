@@ -30,9 +30,28 @@ namespace Coophead.Voice
 
             engine.SpeechRecognized += (sender, e) =>
             {
-                if (e.Result != null && e.Result.Confidence >= MinConfidence && Recognized != null)
+                if (e.Result == null)
                 {
-                    Recognized(this, e.Result.Text, e.Result.Confidence);
+                    return;
+                }
+
+                if (e.Result.Confidence >= MinConfidence)
+                {
+                    if (Recognized != null)
+                    {
+                        Recognized(this, e.Result.Text, e.Result.Confidence);
+                    }
+                }
+                else if (LowConfidence != null)
+                {
+                    LowConfidence(this, e.Result.Text, e.Result.Confidence);
+                }
+            };
+            engine.SpeechRecognitionRejected += (sender, e) =>
+            {
+                if (Rejected != null)
+                {
+                    Rejected(this);
                 }
             };
             engine.RecognizeCompleted += OnRecognizeCompleted;
@@ -42,6 +61,12 @@ namespace Coophead.Voice
         public event Action<RecognitionChannel, string, float> Recognized;
 
         public event Action<RecognitionChannel, string> Failed;
+
+        /// <summary>Frase de la gramática oída con confianza por debajo del mínimo (no cuenta).</summary>
+        public event Action<RecognitionChannel, string, float> LowConfidence;
+
+        /// <summary>Se oyó voz que no se parece a ninguna frase de la gramática.</summary>
+        public event Action<RecognitionChannel> Rejected;
 
         public string Source { get; private set; }
 

@@ -70,9 +70,10 @@ namespace Coophead.Core.Thanks
             return ExpiresAt > now ? ExpiresAt - now : 0f;
         }
 
-        internal bool AcceptsThanks(float now)
+        /// <summary>Acepta el agradecimiento hasta el fin del plazo más el margen de reconocimiento.</summary>
+        internal bool AcceptsThanks(float now, float grace)
         {
-            return now <= ExpiresAt;
+            return now <= ExpiresAt + grace;
         }
     }
 
@@ -106,6 +107,15 @@ namespace Coophead.Core.Thanks
         public bool VoiceAvailable
         {
             get { return voiceAvailable; }
+        }
+
+        /// <summary>
+        /// Margen tras el plazo mientras haya voz: una frase dicha a tiempo cuyo resultado llega un poco tarde sigue
+        /// contando, y el castigo espera a que pase.
+        /// </summary>
+        public float Grace
+        {
+            get { return voiceAvailable ? config.VoiceGraceSeconds : 0f; }
         }
 
         /// <summary>Hay al menos un canal (voz o respaldo manual) para dar las gracias.</summary>
@@ -238,7 +248,7 @@ namespace Coophead.Core.Thanks
             for (int i = 0; i < open.Count;)
             {
                 ThanksWindow window = open[i];
-                if (now < window.ExpiresAt)
+                if (now < window.ExpiresAt + Grace)
                 {
                     i++;
                     continue;
@@ -296,7 +306,7 @@ namespace Coophead.Core.Thanks
         {
             foreach (ThanksWindow window in open)
             {
-                if (window.AcceptsThanks(now) && (!player.HasValue || window.Rescued == player.Value))
+                if (window.AcceptsThanks(now, Grace) && (!player.HasValue || window.Rescued == player.Value))
                 {
                     return window;
                 }

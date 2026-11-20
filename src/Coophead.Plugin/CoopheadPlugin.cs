@@ -106,7 +106,7 @@ namespace Coophead.Plugin
                 session = new CoopheadSession(coreConfig, applier, log);
                 statsStore = new StatsStore(System.IO.Path.Combine(Paths.ConfigPath, "Coophead"), log);
                 statsBook = statsStore.Load();
-                window = new CoopheadWindow(Config);
+                window = new CoopheadWindow(Config) { RequestVoiceTest = StartVoiceTest };
                 SubscribeDiagnostics();
                 active = modEnabled.Value;
                 LogEnvironment();
@@ -286,11 +286,9 @@ namespace Coophead.Plugin
                 return;
             }
 
-            if (voiceTestKey.Value.IsDown() && voice.Available)
+            if (voiceTestKey.Value.IsDown())
             {
-                voiceTesting = true;
-                log.Info("Prueba de voz: escuchando 5 s. Di «" + coreConfig.Thanks.RequiredWord + "».");
-                voice.Send(VoiceProtocol.Test(5f));
+                StartVoiceTest();
             }
 
             foreach (VoiceMessage message in voice.Drain())
@@ -307,13 +305,34 @@ namespace Coophead.Plugin
                         log.Warning("Voz no disponible: " + message.Text + " Nadie será castigado por ello.");
                         break;
                     case VoiceMessageKind.Heard:
+                    {
+                        ThanksWindow closed = session.OnTranscript(message.Text, now);
+                        string line = "«" + message.Text + "» por " + SourceLabel(message.Source) + " (" + Confidence(message)
+                            + ") → " + (closed != null ? "gracias de " + closed.Rescued.Label() : "fuera de ventana");
+                        VoiceLog.Add(line);
                         if (voiceTesting || DiagnosticsEnabled)
                         {
-                            log.Info("Voz: reconocido «" + message.Text + "» por " + (string.IsNullOrEmpty(message.Source) ? "voz" : message.Source)
-                                + " (confianza " + message.Confidence.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + ").");
+                            log.Info("Voz: " + line);
                         }
 
-                        session.OnTranscript(message.Text, now);
+                        break;
+                    }
+
+                    case VoiceMessageKind.Low:
+                    {
+                        string line = "«" + message.Text + "» por " + SourceLabel(message.Source) + " (" + Confidence(message)
+                            + ") → no cuenta: confianza por debajo del mínimo";
+                        VoiceLog.Add(line);
+                        if (voiceTesting || DiagnosticsEnabled)
+                        {
+                            log.Info("Voz: " + line);
+                        }
+
+                        break;
+                    }
+
+                    case VoiceMessageKind.Rejected:
+                        VoiceLog.Add("algo por " + SourceLabel(message.Source) + " → no se parece a «" + coreConfig.Thanks.RequiredWord + "»");
                         break;
                     case VoiceMessageKind.TestEnd:
                         voiceTesting = false;
@@ -324,6 +343,30 @@ namespace Coophead.Plugin
                         break;
                 }
             }
+        }
+
+        internal void StartVoiceTest()
+        {
+            if (voice == null || !voice.Available)
+            {
+                log.Warning("Prueba de voz: la voz no está disponible (actívala con VozActivada y reinicia el juego).");
+                return;
+            }
+
+            voiceTesting = true;
+            VoiceLog.Add("— prueba de 5 s: decid «" + coreConfig.Thanks.RequiredWord + "» —");
+            log.Info("Prueba de voz: escuchando 5 s. Di «" + coreConfig.Thanks.RequiredWord + "».");
+            voice.Send(VoiceProtocol.Test(5f));
+        }
+
+        private static string SourceLabel(string source)
+        {
+            return string.IsNullOrEmpty(source) ? "voz" : source == VoiceProtocol.SourceMicrophone ? "micrófono" : source;
+        }
+
+        private static string Confidence(VoiceMessage message)
+        {
+            return "confianza " + message.Confidence.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         private void RestartLevel()

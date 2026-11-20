@@ -15,8 +15,15 @@ namespace Coophead.Core.Thanks
         /// </summary>
         public bool RequireThanks { get; set; } = true;
 
-        /// <summary>Duración de la ventana desde la reanimación confirmada.</summary>
+        /// <summary>Duración de la ventana, contada desde el parry de reanimación.</summary>
         public float WindowSeconds { get; set; } = 3f;
+
+        /// <summary>
+        /// Margen tras el plazo para que el reconocedor de voz termine de procesar una frase dicha a tiempo. El
+        /// reconocedor de Windows da el resultado cuando acabas de hablar, a veces más de 1 s después. Solo se aplica
+        /// cuando hay voz disponible.
+        /// </summary>
+        public float VoiceGraceSeconds { get; set; } = 1.5f;
 
         /// <summary>Palabra obligatoria. Por defecto «gracias».</summary>
         public string RequiredWord { get; set; } = "gracias";
@@ -36,6 +43,12 @@ namespace Coophead.Core.Thanks
         public IList<string> Validate()
         {
             var warnings = new List<string>();
+            if (float.IsNaN(VoiceGraceSeconds) || VoiceGraceSeconds < 0f || VoiceGraceSeconds > 5f)
+            {
+                warnings.Add("Margen de voz fuera de [0, 5] s; se usa 1,5 s.");
+                VoiceGraceSeconds = 1.5f;
+            }
+
             if (float.IsNaN(WindowSeconds) || WindowSeconds < 1f || WindowSeconds > 15f)
             {
                 warnings.Add("Ventana de agradecimiento fuera de [1, 15] s; se usan 3 s.");
