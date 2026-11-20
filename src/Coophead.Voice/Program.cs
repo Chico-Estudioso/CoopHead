@@ -45,7 +45,7 @@ namespace Coophead.Voice
             float minConfidence = 0.6f;
             float desktopMinConfidence = 0.6f;
             int desktopDelayMs = 300;
-            string desktopDevices = "todos";
+            string desktopDevices = "predeterminado";
             for (int i = 0; i + 1 < args.Length; i += 2)
             {
                 string value = args[i + 1];
@@ -235,6 +235,18 @@ namespace Coophead.Voice
                     continue;
                 }
 
+                float microphoneConfidence;
+                float desktopConfidence;
+                if (VoiceProtocol.TryParseConfidence(line, out microphoneConfidence, out desktopConfidence))
+                {
+                    foreach (RecognitionChannel channel in Channels)
+                    {
+                        channel.MinConfidence = channel.IsDesktop ? desktopConfidence : microphoneConfidence;
+                    }
+
+                    continue;
+                }
+
                 float? testSeconds = VoiceProtocol.ParseTest(line);
                 if (testSeconds.HasValue)
                 {
@@ -257,13 +269,29 @@ namespace Coophead.Voice
         {
             foreach (RecognitionChannel channel in Channels)
             {
+                if (channel.Disabled)
+                {
+                    continue;
+                }
+
                 try
                 {
                     channel.Start();
                 }
                 catch (Exception e)
                 {
-                    Write(VoiceProtocol.FormatError(channel.Source + ": " + e.Message));
+                    if (channel.IsDesktop)
+                    {
+                        // Una salida que Windows no deja escuchar en bucle (p. ej. un cable virtual de 16 canales) fallaría
+                        // en cada ventana: se avisa una vez y se ignora hasta reiniciar el juego.
+                        channel.Disabled = true;
+                        Write(VoiceProtocol.FormatError(channel.Description + ": no se puede escuchar esta salida ("
+                            + e.Message.Trim() + "); se ignora hasta reiniciar el juego."));
+                    }
+                    else
+                    {
+                        Write(VoiceProtocol.FormatError(channel.Source + ": " + e.Message));
+                    }
                 }
             }
 
@@ -295,7 +323,7 @@ namespace Coophead.Voice
         {
             foreach (RecognitionChannel channel in Channels)
             {
-                string activity = channel.DescribeActivity();
+                string activity = channel.Disabled ? null : channel.DescribeActivity();
                 if (activity != null)
                 {
                     Write(VoiceProtocol.FormatInfo(channel.Description + ": " + activity));

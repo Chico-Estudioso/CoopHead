@@ -53,6 +53,9 @@ namespace Coophead.Plugin
         /// <summary>Lanza una prueba de voz de 5 s (la conecta el plugin).</summary>
         public Action RequestVoiceTest { get; set; }
 
+        /// <summary>True mientras dura la prueba de voz.</summary>
+        public Func<bool> IsVoiceTestRunning { get; set; }
+
         /// <summary>Solo desde OnGUI.</summary>
         public void Draw(CoopheadSession currentSession, CoopheadConfig currentConfig, StatsBook currentBook, string currentStatsPath, float userScale)
         {
@@ -320,12 +323,17 @@ namespace Coophead.Plugin
             GUILayout.Label("Voz", title);
             Toggle("7 - Voz", "VozActivada", "Reconocer el «gracias» por voz (requiere reiniciar el juego)");
             EnumCycle("7 - Voz", "FuenteVoz", "Fuente (requiere reiniciar el juego)");
-            Slider("7 - Voz", "ConfianzaMinima", "Confianza mínima del micrófono", 0.1f, 1f, "0.00");
-            Slider("7 - Voz", "ConfianzaMinimaEscritorio", "Confianza mínima del escritorio", 0.1f, 1f, "0.00");
+            Slider("7 - Voz", "ConfianzaMinima", "Confianza mínima del micrófono (se aplica al momento)", 0.1f, 1f, "0.00");
+            Slider("7 - Voz", "ConfianzaMinimaEscritorio", "Confianza mínima del escritorio (se aplica al momento)", 0.1f, 1f, "0.00");
             Slider("7 - Voz", "RetrasoEscritorio", "Escritorio ignorado al hacer el parry (s, requiere reiniciar)", 0f, 2f, "0.0");
-            TextSetting("7 - Voz", "DispositivoEscritorio", "Salidas del escritorio («todos», «predeterminado» o nombre; requiere reiniciar)");
+            TextSetting("7 - Voz", "DispositivoEscritorio", "Salidas del escritorio («predeterminado», «todos» o nombre; requiere reiniciar)");
             Slider(CoopheadSettings.ThanksSection, "MargenVoz", "Margen para que la voz termine de procesar (s)", 0f, 5f, "0.0");
-            if (GUILayout.Button("Probar la voz 5 s (también F9)", GUILayout.Width(300f)) && RequestVoiceTest != null)
+            bool testing = IsVoiceTestRunning != null && IsVoiceTestRunning();
+            if (testing)
+            {
+                GUILayout.Label("Escuchando 5 s… decid «gracias» ahora (el resultado aparece abajo).", title);
+            }
+            else if (GUILayout.Button("Probar la voz 5 s (también F9)", GUILayout.Width(300f)) && RequestVoiceTest != null)
             {
                 RequestVoiceTest();
             }

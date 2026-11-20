@@ -68,6 +68,44 @@ namespace Coophead.Core.Tests
         }
 
         [Fact]
+        public void OrdenDeConfianzaIdaYVuelta()
+        {
+            string line = VoiceProtocol.Confidence(0.6f, 0.45f);
+            float microphone;
+            float desktop;
+
+            Assert.Equal("CONFIDENCE 0.60 0.45", line);
+            Assert.True(VoiceProtocol.TryParseConfidence(line, out microphone, out desktop));
+            Assert.Equal(0.6f, microphone, 3);
+            Assert.Equal(0.45f, desktop, 3);
+        }
+
+        [Theory]
+        [InlineData("CONFIDENCE 0.5")]
+        [InlineData("CONFIDENCE a b")]
+        [InlineData("CONFIDENCE")]
+        [InlineData("LISTEN")]
+        [InlineData(null)]
+        public void OrdenDeConfianzaInvalida(string line)
+        {
+            float microphone;
+            float desktop;
+
+            Assert.False(VoiceProtocol.TryParseConfidence(line, out microphone, out desktop));
+        }
+
+        [Fact]
+        public void LaConfianzaSeLimitaAUnRangoValido()
+        {
+            float microphone;
+            float desktop;
+
+            Assert.True(VoiceProtocol.TryParseConfidence("CONFIDENCE -3 7", out microphone, out desktop));
+            Assert.Equal(0.05f, microphone, 3);
+            Assert.Equal(1f, desktop, 3);
+        }
+
+        [Fact]
         public void MensajeDeDiagnostico()
         {
             VoiceMessage info = VoiceProtocol.Parse(VoiceProtocol.FormatInfo("escritorio2 = Auriculares: llegó audio 4.9 s\r\n"));

@@ -12,6 +12,7 @@ namespace Coophead.Voice
         private readonly object gate = new object();
         private readonly SpeechRecognitionEngine engine;
         private readonly LoopbackSource loopback;
+        private volatile float minimumConfidence;
         private bool running;
         private bool restartRequested;
         private bool stopRequested = true;
@@ -89,7 +90,21 @@ namespace Coophead.Voice
         /// <summary>Descripción para el diagnóstico («escritorio1 = Auriculares…»).</summary>
         public string Description { get; set; }
 
-        public float MinConfidence { get; private set; }
+        /// <summary>Confianza mínima; el plugin la cambia en caliente con la orden CONFIDENCE.</summary>
+        public float MinConfidence
+        {
+            get { return minimumConfidence; }
+            set { minimumConfidence = value; }
+        }
+
+        /// <summary>True si escucha una salida de audio (escritorio) en lugar del micrófono.</summary>
+        public bool IsDesktop
+        {
+            get { return loopback != null; }
+        }
+
+        /// <summary>Salida que no se puede escuchar (p. ej. un formato que Windows no admite en bucle): se ignora.</summary>
+        public bool Disabled { get; set; }
 
         /// <summary>Avisos de diagnóstico (p. ej. el reconocedor dejó de escuchar antes de tiempo).</summary>
         public event Action<RecognitionChannel, string> Notice;

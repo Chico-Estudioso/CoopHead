@@ -10,19 +10,32 @@ namespace Coophead.Plugin
     internal static class VoiceLog
     {
         private const int Capacity = 15;
-        private static readonly Queue<string> Lines = new Queue<string>();
+        private static readonly List<Entry> Lines = new List<Entry>();
         private static readonly object Gate = new object();
 
+        /// <summary>
+        /// Añade una línea. Si es igual que la anterior (p. ej. la música del juego rechazada una y otra vez), solo
+        /// suma «(×N)» para no tapar las líneas útiles.
+        /// </summary>
         public static void Add(string line)
         {
             lock (Gate)
             {
-                if (Lines.Count == Capacity)
+                string time = DateTime.Now.ToString("HH:mm:ss");
+                if (Lines.Count > 0 && Lines[Lines.Count - 1].Text == line)
                 {
-                    Lines.Dequeue();
+                    Entry last = Lines[Lines.Count - 1];
+                    last.Count++;
+                    last.Time = time;
+                    return;
                 }
 
-                Lines.Enqueue(DateTime.Now.ToString("HH:mm:ss") + "  " + line);
+                if (Lines.Count == Capacity)
+                {
+                    Lines.RemoveAt(0);
+                }
+
+                Lines.Add(new Entry { Text = line, Time = time, Count = 1 });
             }
         }
 
@@ -31,10 +44,22 @@ namespace Coophead.Plugin
         {
             lock (Gate)
             {
-                string[] copy = Lines.ToArray();
-                Array.Reverse(copy);
+                var copy = new string[Lines.Count];
+                for (int i = 0; i < Lines.Count; i++)
+                {
+                    Entry entry = Lines[Lines.Count - 1 - i];
+                    copy[i] = entry.Time + "  " + entry.Text + (entry.Count > 1 ? "  (×" + entry.Count + ")" : string.Empty);
+                }
+
                 return copy;
             }
+        }
+
+        private sealed class Entry
+        {
+            public string Text;
+            public string Time;
+            public int Count;
         }
     }
 }

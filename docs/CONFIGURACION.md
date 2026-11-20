@@ -13,7 +13,7 @@ Pulsa **F6** dentro del juego para abrir o cerrar la ventana, que se maneja con 
 - **Recuerdos**: el libro de recuerdos. Elige un nivel a la izquierda y verás intentos, victorias, tiempos y la comparativa P1/P2 de los totales, del **try final** (última victoria) o del último intento. En dorado, quién lleva más.
 - **Totales**: todo lo jugado juntos y los niveles más intentados.
 - **Ruleta**: activar o desactivar cada castigo, su peso y la probabilidad actual para cada jugador según su presión.
-- **Ajustes**: los interruptores principales (reglas, reinicio, límites, agradecimiento, voz, castigos y HUD). Los cambios se guardan al momento. En la parte de voz hay un botón para **probar la voz 5 s** y la lista de las **últimas frases oídas**: aceptadas, por debajo de la confianza mínima o no entendidas, con su fuente y confianza, para ajustar `ConfianzaMinima` y `ConfianzaMinimaEscritorio`. Al terminar la prueba aparece cuánto audio llegó por cada salida del escritorio y a qué volumen.
+- **Ajustes**: los interruptores principales (reglas, reinicio, límites, agradecimiento, voz, castigos y HUD). Los cambios se guardan al momento. En la parte de voz hay un botón para **probar la voz 5 s** y la lista de las **últimas frases oídas**: aceptadas, por debajo de la confianza mínima o no entendidas, con su fuente y confianza, para ajustar `ConfianzaMinima` y `ConfianzaMinimaEscritorio`. Al terminar la prueba aparece cuánto audio llegó por cada salida del escritorio y a qué volumen. Mientras dura la prueba se ve «Escuchando…»; lo reconocido aparece como «RECONOCIDO (prueba…)». Las líneas repetidas se agrupan con «(×N)».
 - **Registro**: los últimos mensajes de Coophead, para ver si se detectan bien muertes, rescates y frases.
 
 El HUD de la esquina sigue funcionando igual durante la partida. Para editar todos los ajustes desde el juego también se puede instalar el mod BepInEx.ConfigurationManager (opcional, se abre con F1).
@@ -109,11 +109,11 @@ Agradecimiento: voz no disponible · tecla activa
 |---|---|---|
 | `VozActivada` | `false` | Reconocimiento local con el reconocedor de Windows. Requiere reiniciar el juego. |
 | `Idioma` | `es-ES` | Debe estar instalado con «Reconocimiento de voz» en Windows. |
-| `ConfianzaMinima` | `0.6` | 0,1–1. Súbela si hay falsos positivos; bájala si no te reconoce. |
+| `ConfianzaMinima` | `0.6` | 0,1–1. Súbela si hay falsos positivos; bájala si no te reconoce. Se aplica al momento. |
 | `FuenteVoz` | `Ambos` | `Microfono`, `Escritorio` (lo que suena en el PC, p. ej. Parsec) o `Ambos`. Requiere reiniciar el juego. |
-| `ConfianzaMinimaEscritorio` | `0.6` | 0,1–1. Para lo oído por el escritorio, donde también suena el juego. |
+| `ConfianzaMinimaEscritorio` | `0.5` | 0,1–1. Para lo oído por el escritorio. La voz por Discord llega comprimida y mezclada con el juego y suele dar entre 0,6 y 0,7. Se aplica al momento. |
 | `RetrasoEscritorio` | `0.3` s | 0–2. Tiempo inicial de la ventana en que se ignora el escritorio (sonido de reanimación del juego). Pequeño para que un «gracias» dicho justo al hacer el parry cuente. |
-| `DispositivoEscritorio` | `todos` | Salidas de audio que escucha la fuente Escritorio: `todos` (todas las activas, útil con Discord), `predeterminado` o parte del nombre del dispositivo. Requiere reiniciar el juego. |
+| `DispositivoEscritorio` | `predeterminado` | Salidas de audio que escucha la fuente Escritorio: `predeterminado` (salidas predeterminadas de Windows, multimedia y comunicaciones), `todos` (todas las activas, para averiguar por cuál suena Discord) o parte del nombre del dispositivo. Requiere reiniciar el juego. |
 | `TeclaPruebaVoz` | `F9` | Escucha 5 s y escribe en el log lo reconocido y por qué fuente. |
 
 Privacidad y limitaciones en `docs/VOZ_Y_PRIVACIDAD.md`.

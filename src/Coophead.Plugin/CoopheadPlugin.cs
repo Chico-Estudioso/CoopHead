@@ -63,6 +63,10 @@ namespace Coophead.Plugin
         private GameEffectsApplier gameEffects;
         private bool restartPending;
         private bool voiceTesting;
+        private float voiceTestStartedAt;
+
+        /// <summary>Margen tras el que una prueba sin respuesta del ayudante se da por terminada.</summary>
+        private const float VoiceTestTimeoutSeconds = 9f;
         private float summaryUntil;
         private ConfigEntry<KeyboardShortcut> thanksKeyP1;
         private ConfigEntry<KeyboardShortcut> thanksKeyP2;
@@ -107,7 +111,7 @@ namespace Coophead.Plugin
                 session = new CoopheadSession(coreConfig, applier, log);
                 statsStore = new StatsStore(System.IO.Path.Combine(Paths.ConfigPath, "Coophead"), log);
                 statsBook = statsStore.Load();
-                window = new CoopheadWindow(Config) { RequestVoiceTest = StartVoiceTest };
+                window = new CoopheadWindow(Config) { RequestVoiceTest = StartVoiceTest, IsVoiceTestRunning = () => VoiceTestRunning };
                 SubscribeDiagnostics();
                 active = modEnabled.Value;
                 LogEnvironment();
@@ -219,15 +223,15 @@ namespace Coophead.Plugin
             voiceCulture = Config.Bind(VoiceSection, "Idioma", "es-ES",
                 "Idioma del reconocedor de Windows. Debe estar instalado con «Reconocimiento de voz».");
             voiceMinConfidence = Config.Bind(VoiceSection, "ConfianzaMinima", 0.6f,
-                new ConfigDescription("Confianza mínima del reconocedor para aceptar la frase. Súbela si hay falsos positivos.", new AcceptableValueRange<float>(0.1f, 1f)));
+                new ConfigDescription("Confianza mínima del reconocedor para aceptar la frase del micrófono. Súbela si hay falsos positivos. Se aplica al momento.", new AcceptableValueRange<float>(0.1f, 1f)));
             voiceSources = Config.Bind(VoiceSection, "FuenteVoz", VoiceSourceMode.Ambos,
                 "De dónde se escucha el «gracias»: Microfono (tu micrófono predeterminado), Escritorio (lo que suena en el PC, p. ej. la voz de tu pareja por Parsec) o Ambos. Requiere reiniciar el juego.");
-            voiceDesktopMinConfidence = Config.Bind(VoiceSection, "ConfianzaMinimaEscritorio", 0.6f,
-                new ConfigDescription("Confianza mínima para frases oídas por el escritorio. Más alta que la del micrófono porque ahí también suena el juego.", new AcceptableValueRange<float>(0.1f, 1f)));
+            voiceDesktopMinConfidence = Config.Bind(VoiceSection, "ConfianzaMinimaEscritorio", 0.5f,
+                new ConfigDescription("Confianza mínima para frases oídas por el escritorio (la voz de la pareja por Discord o Parsec llega comprimida y mezclada con el juego, y suele dar entre 0,6 y 0,7). Se aplica al momento.", new AcceptableValueRange<float>(0.1f, 1f)));
             voiceDesktopDelay = Config.Bind(VoiceSection, "RetrasoEscritorio", 0.3f,
                 new ConfigDescription("Segundos que se ignora el escritorio al abrirse la ventana, para no confundir el sonido de reanimación del juego con un «gracias». Requiere reiniciar el juego.", new AcceptableValueRange<float>(0f, 2f)));
-            voiceDesktopDevices = Config.Bind(VoiceSection, "DispositivoEscritorio", "todos",
-                "Salidas de audio que se escuchan para la fuente Escritorio: «todos» (todas las activas; útil si Discord saca el sonido por otra salida), «predeterminado» o parte del nombre del dispositivo (p. ej. «Headphones»). Requiere reiniciar el juego.");
+            voiceDesktopDevices = Config.Bind(VoiceSection, "DispositivoEscritorio", "predeterminado",
+                "Salidas de audio que se escuchan para la fuente Escritorio: «predeterminado» (las salidas predeterminadas de Windows, multimedia y comunicaciones), «todos» (todas las activas, para averiguar por cuál suena Discord) o parte del nombre del dispositivo (p. ej. «Headphones»). Requiere reiniciar el juego.");
             voiceTestKey = Config.Bind(VoiceSection, "TeclaPruebaVoz", new KeyboardShortcut(KeyCode.F9),
                 "Escucha 5 s y escribe en el log lo que se ha reconocido, para probar el micrófono.");
             windowKey = Config.Bind(WindowSection, "TeclaVentana", new KeyboardShortcut(KeyCode.F6),
@@ -312,8 +316,10 @@ namespace Coophead.Plugin
                     case VoiceMessageKind.Heard:
                     {
                         ThanksWindow closed = session.OnTranscript(message.Text, now);
-                        string line = "«" + message.Text + "» por " + SourceLabel(message.Source) + " (" + Confidence(message)
-                            + ") → " + (closed != null ? "gracias de " + closed.Rescued.Label() : "fuera de ventana");
+                        string outcome = closed != null
+                            ? "gracias de " + closed.Rescued.Label()
+                            : voiceTesting ? "RECONOCIDO (prueba: en partida contaría como gracias)" : "fuera de ventana (no había ningún rescate pendiente)";
+                        string line = "«" + message.Text + "» por " + SourceLabel(message.Source) + " (" + Confidence(message) + ") → " + outcome;
                         VoiceLog.Add(line);
                         if (voiceTesting || DiagnosticsEnabled)
                         {
@@ -355,6 +361,12 @@ namespace Coophead.Plugin
             }
         }
 
+        /// <summary>True mientras dura una prueba de voz (para la ventana F6).</summary>
+        internal bool VoiceTestRunning
+        {
+            get { return voiceTesting && Time.realtimeSinceStartup - voiceTestStartedAt < VoiceTestTimeoutSeconds; }
+        }
+
         internal void StartVoiceTest()
         {
             if (voice == null || !voice.Available)
@@ -363,7 +375,14 @@ namespace Coophead.Plugin
                 return;
             }
 
+            if (VoiceTestRunning)
+            {
+                // Pulsar otra vez reiniciaba la prueba y mezclaba los resultados: se espera a que termine la actual.
+                return;
+            }
+
             voiceTesting = true;
+            voiceTestStartedAt = Time.realtimeSinceStartup;
             VoiceLog.Add("— prueba de 5 s: decid «" + coreConfig.Thanks.RequiredWord + "» —");
             log.Info("Prueba de voz: escuchando 5 s. Di «" + coreConfig.Thanks.RequiredWord + "».");
             voice.Send(VoiceProtocol.Test(5f));
@@ -518,6 +537,11 @@ namespace Coophead.Plugin
         {
             try
             {
+                if (voice != null && (e.ChangedSetting == voiceMinConfidence || e.ChangedSetting == voiceDesktopMinConfidence))
+                {
+                    voice.Send(VoiceProtocol.Confidence(voiceMinConfidence.Value, voiceDesktopMinConfidence.Value));
+                }
+
                 ApplySettings();
             }
             catch (Exception exception)

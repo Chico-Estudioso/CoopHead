@@ -3,6 +3,20 @@
 Los cambios se documentan en español y se agrupan por versión.
 
 ## Sin publicar
+### Verificado (20/11/2026, voz por el escritorio)
+- La voz de la pareja por Discord se reconoce por el escritorio («gracias cari», confianza 0,60–0,68) con la tubería corregida. Discord sonaba por la salida predeterminada (`docs/pruebas/2026-11-20-voz-escritorio.md`).
+
+### Cambiado (20/11/2026)
+- `DispositivoEscritorio` pasa a `predeterminado` por defecto; `todos` queda para diagnosticar.
+- `ConfianzaMinimaEscritorio` pasa a 0,5 por defecto.
+- `ConfianzaMinima` y `ConfianzaMinimaEscritorio` se aplican al momento al cambiarlas (F6 o configuración), sin reiniciar el juego.
+
+### Corregido (20/11/2026, prueba de voz)
+- Una salida de audio que no se puede escuchar (p. ej. un cable virtual de 16 canales) daba error en cada ventana; ahora se avisa una vez y se ignora.
+- La prueba de voz se reiniciaba al pulsarla otra vez y mezclaba resultados. F6 muestra «Escuchando…» mientras dura.
+- En la prueba, una frase reconocida aparecía como «fuera de ventana», que parecía un fallo; ahora dice «RECONOCIDO (prueba: en partida contaría como gracias)».
+- Las líneas repetidas de «Últimas frases oídas» se agrupan con «(×N)».
+
 ### Corregido (20/11/2026, el escritorio no reconocía nada)
 - La voz del escritorio no reconocía nada: el reconocedor de Windows toma una lectura más corta de lo pedido como fin del audio y dejaba de escuchar al instante, sin avisar. La tubería de audio ahora espera a tener todo lo pedido. Afectaba a cualquier voz por el escritorio (Discord o Parsec); el micrófono no usaba esta vía.
 - Si un reconocedor deja de escuchar antes de tiempo, se avisa en el log y en F6 y se vuelve a poner en marcha (hasta 3 veces por ventana).
