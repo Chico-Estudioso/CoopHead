@@ -3,6 +3,12 @@
 Los cambios se documentan en español y se agrupan por versión.
 
 ## Sin publicar
+### Corregido (20/11/2026, el escritorio no reconocía nada)
+- La voz del escritorio no reconocía nada: el reconocedor de Windows toma una lectura más corta de lo pedido como fin del audio y dejaba de escuchar al instante, sin avisar. La tubería de audio ahora espera a tener todo lo pedido. Afectaba a cualquier voz por el escritorio (Discord o Parsec); el micrófono no usaba esta vía.
+- Si un reconocedor deja de escuchar antes de tiempo, se avisa en el log y en F6 y se vuelve a poner en marcha (hasta 3 veces por ventana).
+- Al terminar la prueba de voz (F9 o F6), el log y F6 indican cuánto audio llegó por cada salida del escritorio y a qué volumen, para saber por cuál suena la pareja.
+- Los errores del ayudante de voz también aparecen en F6 → «Últimas frases oídas».
+
 ### Corregido (20/11/2026, voz de la pareja por Discord)
 - La fuente Escritorio escucha todas las salidas de audio activas (`DispositivoEscritorio = todos`), numeradas en el log y en F6: Discord puede sacar la voz por una salida distinta de la predeterminada.
 - Se baja el umbral de rechazo interno del reconocedor de Windows para que decida `ConfianzaMinima`.

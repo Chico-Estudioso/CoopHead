@@ -172,6 +172,8 @@ namespace Coophead.Voice
                 channel.LowConfidence += (c, text, confidence) => Write(VoiceProtocol.FormatLow(confidence, text, c.Source));
                 channel.Rejected += c => Write(VoiceProtocol.FormatRejected(c.Source));
                 channel.Failed += (c, message) => Write(VoiceProtocol.FormatError(c.Source + ": " + message));
+                channel.Notice += (c, message) => Write(VoiceProtocol.FormatInfo(c.Source + ": " + message));
+                channel.Description = description;
                 Channels.Add(channel);
                 active.Add(description);
             }
@@ -241,6 +243,7 @@ namespace Coophead.Voice
                     testTimer = new Timer(_ =>
                     {
                         StopAll();
+                        ReportActivity();
                         Write(VoiceProtocol.TestEnd);
                     }, null, (int)(testSeconds.Value * 1000f), Timeout.Infinite);
                     continue;
@@ -282,6 +285,22 @@ namespace Coophead.Voice
             }
 
             Write(VoiceProtocol.Stopped);
+        }
+
+        /// <summary>
+        /// Tras una prueba, cuánto audio llegó por cada salida del escritorio y a qué volumen: si la voz de la pareja
+        /// (Discord, Parsec…) no sube el volumen de ninguna, no está sonando por las salidas que se escuchan.
+        /// </summary>
+        private static void ReportActivity()
+        {
+            foreach (RecognitionChannel channel in Channels)
+            {
+                string activity = channel.DescribeActivity();
+                if (activity != null)
+                {
+                    Write(VoiceProtocol.FormatInfo(channel.Description + ": " + activity));
+                }
+            }
         }
 
         private static void CancelTest()

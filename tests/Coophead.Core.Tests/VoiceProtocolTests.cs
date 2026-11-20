@@ -67,6 +67,15 @@ namespace Coophead.Core.Tests
             Assert.Equal("mic", rejected.Source);
         }
 
+        [Fact]
+        public void MensajeDeDiagnostico()
+        {
+            VoiceMessage info = VoiceProtocol.Parse(VoiceProtocol.FormatInfo("escritorio2 = Auriculares: llegó audio 4.9 s\r\n"));
+
+            Assert.Equal(VoiceMessageKind.Info, info.Kind);
+            Assert.Equal("escritorio2 = Auriculares: llegó audio 4.9 s", info.Text);
+        }
+
         [Theory]
         [InlineData("\uFEFFLISTEN", "LISTEN")]
         [InlineData("LISTEN\r", "LISTEN")]

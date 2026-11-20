@@ -6,7 +6,8 @@ namespace Coophead.Voice
 {
     /// <summary>
     /// Tubería en memoria entre la captura del escritorio y el reconocedor: Write añade audio y Read espera hasta
-    /// que haya datos. Al completarla, Read devuelve 0 (fin de flujo) y el reconocedor termina. Nada se guarda.
+    /// tener todo lo pedido. Al completarla, Read devuelve lo que quede (fin de flujo) y el reconocedor termina.
+    /// Nada se guarda.
     /// </summary>
     internal sealed class AudioPipeStream : Stream
     {
@@ -53,30 +54,41 @@ namespace Coophead.Voice
             }
         }
 
+        /// <summary>
+        /// Espera hasta tener todo lo pedido. El reconocedor de Windows (SAPI) interpreta una lectura más corta de lo
+        /// pedido como fin del flujo y deja de escuchar sin avisar: por eso el escritorio no reconocía nada. Solo se
+        /// devuelve menos cuando la tubería se ha completado (fin real).
+        /// </summary>
         public override int Read(byte[] destination, int offset, int requested)
         {
+            int copied = 0;
             lock (gate)
             {
-                while (count == 0 && !completed)
+                while (copied < requested)
                 {
-                    Monitor.Wait(gate);
-                }
+                    while (count == 0 && !completed)
+                    {
+                        Monitor.Wait(gate);
+                    }
 
-                if (count == 0)
-                {
-                    return 0;
-                }
+                    if (count == 0)
+                    {
+                        break;
+                    }
 
-                int toCopy = Math.Min(requested, count);
-                for (int i = 0; i < toCopy; i++)
-                {
-                    destination[offset + i] = buffer[(start + i) % buffer.Length];
-                }
+                    int toCopy = Math.Min(requested - copied, count);
+                    for (int i = 0; i < toCopy; i++)
+                    {
+                        destination[offset + copied + i] = buffer[(start + i) % buffer.Length];
+                    }
 
-                start = (start + toCopy) % buffer.Length;
-                count -= toCopy;
-                return toCopy;
+                    start = (start + toCopy) % buffer.Length;
+                    count -= toCopy;
+                    copied += toCopy;
+                }
             }
+
+            return copied;
         }
 
         public override void Write(byte[] source, int offset, int length)

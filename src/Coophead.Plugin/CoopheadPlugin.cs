@@ -343,8 +343,13 @@ namespace Coophead.Plugin
                         voiceTesting = false;
                         log.Info("Prueba de voz terminada.");
                         break;
+                    case VoiceMessageKind.Info:
+                        log.Info("Voz: " + message.Text);
+                        VoiceLog.Add(message.Text);
+                        break;
                     case VoiceMessageKind.Error:
                         log.Warning("Voz: " + message.Text);
+                        VoiceLog.Add("error: " + message.Text);
                         break;
                 }
             }

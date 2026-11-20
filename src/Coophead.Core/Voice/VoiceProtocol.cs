@@ -30,6 +30,9 @@ namespace Coophead.Core.Voice
 
         /// <summary>Se oyó voz pero no se pareció a ninguna frase de la gramática.</summary>
         Rejected,
+
+        /// <summary>Diagnóstico informativo (p. ej. cuánto audio llegó por cada salida en una prueba).</summary>
+        Info,
     }
 
     public sealed class VoiceMessage
@@ -79,6 +82,7 @@ namespace Coophead.Core.Voice
         public const string TestEnd = "TEST_END";
         public const string LowConfidence = "LOW";
         public const string RejectedSpeech = "REJECTED";
+        public const string InfoMessage = "INFO";
 
         public const float MaxTestSeconds = 15f;
 
@@ -117,6 +121,12 @@ namespace Coophead.Core.Voice
         public static string FormatUnavailable(string reason)
         {
             return Unavailable + " " + SingleLine(reason);
+        }
+
+        /// <summary>«INFO escritorio1 = Auriculares: llegó audio 4.9 s…»: diagnóstico sin efecto en las reglas.</summary>
+        public static string FormatInfo(string message)
+        {
+            return InfoMessage + " " + SingleLine(message);
         }
 
         public static string FormatError(string message)
@@ -213,6 +223,8 @@ namespace Coophead.Core.Voice
                     return ParseHeard(rest, VoiceMessageKind.Low);
                 case RejectedSpeech:
                     return new VoiceMessage(VoiceMessageKind.Rejected, string.Empty, 0f, rest);
+                case InfoMessage:
+                    return new VoiceMessage(VoiceMessageKind.Info, rest, 0f);
                 default:
                     return new VoiceMessage(VoiceMessageKind.Unknown, line, 0f);
             }

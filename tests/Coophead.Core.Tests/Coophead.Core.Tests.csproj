@@ -16,4 +16,9 @@
     <ProjectReference Include="..\..\src\Coophead.Core\Coophead.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- La tubería de audio del ayudante de voz no depende de Windows: se prueba enlazando el archivo. -->
+    <Compile Include="..\..\src\Coophead.Voice\AudioPipeStream.cs" Link="Voice\AudioPipeStream.cs" />
+  </ItemGroup>
+
 </Project>
