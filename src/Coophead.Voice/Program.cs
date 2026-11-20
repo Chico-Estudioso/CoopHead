@@ -44,7 +44,7 @@ namespace Coophead.Voice
             string sources = VoiceProtocol.SourceMicrophone;
             float minConfidence = 0.6f;
             float desktopMinConfidence = 0.6f;
-            int desktopDelayMs = 800;
+            int desktopDelayMs = 300;
             for (int i = 0; i + 1 < args.Length; i += 2)
             {
                 string value = args[i + 1];

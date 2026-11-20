@@ -223,7 +223,7 @@ namespace Coophead.Plugin
                 "De dónde se escucha el «gracias»: Microfono (tu micrófono predeterminado), Escritorio (lo que suena en el PC, p. ej. la voz de tu pareja por Parsec) o Ambos. Requiere reiniciar el juego.");
             voiceDesktopMinConfidence = Config.Bind(VoiceSection, "ConfianzaMinimaEscritorio", 0.6f,
                 new ConfigDescription("Confianza mínima para frases oídas por el escritorio. Más alta que la del micrófono porque ahí también suena el juego.", new AcceptableValueRange<float>(0.1f, 1f)));
-            voiceDesktopDelay = Config.Bind(VoiceSection, "RetrasoEscritorio", 0.8f,
+            voiceDesktopDelay = Config.Bind(VoiceSection, "RetrasoEscritorio", 0.3f,
                 new ConfigDescription("Segundos que se ignora el escritorio al abrirse la ventana, para no confundir el sonido de reanimación del juego con un «gracias». Requiere reiniciar el juego.", new AcceptableValueRange<float>(0f, 2f)));
             voiceTestKey = Config.Bind(VoiceSection, "TeclaPruebaVoz", new KeyboardShortcut(KeyCode.F9),
                 "Escucha 5 s y escribe en el log lo que se ha reconocido, para probar el micrófono.");

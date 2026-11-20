@@ -37,7 +37,8 @@ La regla es idéntica para P1 y P2.
 En Cuphead el fantasma no caduca. Si sube fuera de cámara, el jugador muerto puede robar un corazón a su pareja y revivir solo. **Fuera de alcance por ahora** (ADR-004): no se cuenta ni se castiga, y la integración no debe registrarlo como rescate.
 
 ## Agradecimiento
-- Ventana: 3 s desde una reanimación confirmada.
+- **El «gracias» se da al hacer el parry de reanimación**: la ventana se abre en ese instante y dura `VentanaSegundos` (3 s por defecto) contados desde el parry.
+- El rescatado tarda unos 2 s en reaparecer. Si el plazo acaba antes de que vuelva a la partida, el castigo se aplica en cuanto reaparece (como mucho, 6 s después); si vuelve a morir antes, no hay castigo. El HUD muestra «sin gracias · castigo al reaparecer».
 - Vale para los dos jugadores. Por defecto basta con que se reconozca **«gracias»** («Gracias, Cari», «Gracias, amor», «muchas gracias»…). Con `RequireName` hace falta además uno de los apelativos configurados (`cari`, `kari`, `amor` por defecto).
 - Se normaliza el texto: sin mayúsculas, tildes ni signos.
 - Con un solo micrófono no se distingue quién habla: una frase reconocida cierra la ventana pendiente más antigua.

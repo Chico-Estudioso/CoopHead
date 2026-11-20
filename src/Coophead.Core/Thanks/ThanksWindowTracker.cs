@@ -43,16 +43,14 @@ namespace Coophead.Core.Thanks
 
         public float OpenedAt { get; private set; }
 
-        public float ExpiresAt { get; internal set; }
+        /// <summary>Fin del plazo: <see cref="OpenedAt"/> (el parry) + segundos de la ventana.</summary>
+        public float ExpiresAt { get; private set; }
 
         /// <summary>
-        /// El rescate ya ocurrió pero el jugador aún está en la animación de reaparecer. Mientras tanto la ventana
-        /// acepta el agradecimiento pero no caduca: el plazo cuenta desde que vuelve a la partida.
+        /// El rescatado aún está en la animación de reaparecer. No cambia el plazo (cuenta desde el parry); solo sirve
+        /// para que, si falta el agradecimiento, el castigo espere a que vuelva a la partida.
         /// </summary>
         public bool AwaitingRevive { get; internal set; }
-
-        /// <summary>Límite de espera a la confirmación, por si el juego nunca la notifica.</summary>
-        internal float ReviveDeadline { get; set; }
 
         public ThanksResolution Resolution { get; internal set; }
 
@@ -67,7 +65,6 @@ namespace Coophead.Core.Thanks
             get { return Resolution == ThanksResolution.Pending; }
         }
 
-        /// <summary>Segundos que quedan; mientras espera la reaparición, el plazo completo aún no ha empezado.</summary>
         public float Remaining(float now)
         {
             return ExpiresAt > now ? ExpiresAt - now : 0f;
@@ -75,7 +72,7 @@ namespace Coophead.Core.Thanks
 
         internal bool AcceptsThanks(float now)
         {
-            return AwaitingRevive || now <= ExpiresAt;
+            return now <= ExpiresAt;
         }
     }
 
@@ -85,7 +82,7 @@ namespace Coophead.Core.Thanks
     /// </summary>
     public sealed class ThanksWindowTracker
     {
-        /// <summary>Espera máxima a que el juego confirme la reaparición antes de contar el plazo igualmente.</summary>
+        /// <summary>Espera máxima a que el juego confirme la reaparición antes de aplicar un castigo pendiente igualmente.</summary>
         public const float MaxReviveWaitSeconds = 6f;
 
         private readonly ThanksConfig config;
@@ -136,7 +133,7 @@ namespace Coophead.Core.Thanks
         /// <param name="now">Reloj del juego.</param>
         /// <param name="resolved">Recibe la ventana anterior del mismo jugador si se sustituye.</param>
         /// <param name="awaitingRevive">
-        /// true si el jugador aún tiene que reaparecer: el plazo empezará con <see cref="ConfirmRevive"/>.
+        /// true si el jugador aún tiene que reaparecer. El plazo cuenta igualmente desde ahora (el parry).
         /// </param>
         public ThanksWindow Open(PlayerSlot rescued, PlayerSlot rescuer, float now, List<ThanksWindow> resolved, bool awaitingRevive)
         {
@@ -147,11 +144,7 @@ namespace Coophead.Core.Thanks
 
             CloseFor(rescued, "Sustituida por una nueva reanimación.", resolved);
             var window = new ThanksWindow(nextId++, rescued, rescuer, now, now + config.WindowSeconds);
-            if (awaitingRevive)
-            {
-                window.AwaitingRevive = true;
-                window.ReviveDeadline = now + MaxReviveWaitSeconds;
-            }
+            window.AwaitingRevive = awaitingRevive;
 
             if (!CanEvaluate)
             {
@@ -162,18 +155,15 @@ namespace Coophead.Core.Thanks
             return window;
         }
 
-        /// <summary>
-        /// El jugador ha vuelto a la partida: el plazo para dar las gracias cuenta desde ahora (sin acortar el que ya tenía).
-        /// </summary>
-        /// <returns>La ventana confirmada, o null si no había ninguna esperando.</returns>
-        public ThanksWindow ConfirmRevive(PlayerSlot rescued, float now)
+        /// <summary>El jugador ha vuelto a la partida. No cambia el plazo, que cuenta desde el parry.</summary>
+        /// <returns>La ventana abierta de ese jugador, o null si no había ninguna esperando.</returns>
+        public ThanksWindow ConfirmRevive(PlayerSlot rescued)
         {
             foreach (ThanksWindow window in open)
             {
                 if (window.Rescued == rescued && window.AwaitingRevive)
                 {
                     window.AwaitingRevive = false;
-                    window.ExpiresAt = System.Math.Max(window.ExpiresAt, now + config.WindowSeconds);
                     return window;
                 }
             }
@@ -248,14 +238,7 @@ namespace Coophead.Core.Thanks
             for (int i = 0; i < open.Count;)
             {
                 ThanksWindow window = open[i];
-                if (window.AwaitingRevive && now >= window.ReviveDeadline)
-                {
-                    // El juego no confirmó la reaparición a tiempo: se cuenta el plazo desde ahora.
-                    window.AwaitingRevive = false;
-                    window.ExpiresAt = System.Math.Max(window.ExpiresAt, now + config.WindowSeconds);
-                }
-
-                if (window.AwaitingRevive || now < window.ExpiresAt)
+                if (now < window.ExpiresAt)
                 {
                     i++;
                     continue;

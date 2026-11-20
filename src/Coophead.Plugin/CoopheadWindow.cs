@@ -150,8 +150,12 @@ namespace Coophead.Plugin
             GUILayout.Label("Equipo: " + state.TeamRevives + " reanimaciones" + (coreConfig.Rules.TeamReviveLimit > 0 ? " de " + coreConfig.Rules.TeamReviveLimit : string.Empty), rich);
             foreach (ThanksWindow window in session.Thanks.Pending)
             {
-                string left = window.AwaitingRevive ? "(reapareciendo…)" : window.Remaining(Time.time).ToString("0.0", Invariant) + " s";
-                GUILayout.Label(Colored(window.Rescued.Label() + ": ¡da las gracias! " + left), rich);
+                GUILayout.Label(Colored(window.Rescued.Label() + ": ¡da las gracias! " + window.Remaining(Time.time).ToString("0.0", Invariant) + " s"), rich);
+            }
+
+            foreach (PlayerSlot waiting in session.PunishmentsWaitingForRevive)
+            {
+                GUILayout.Label(waiting.Label() + ": sin gracias · castigo al reaparecer", rich);
             }
 
             foreach (ActivePenalty penalty in session.Penalties.Active)
@@ -305,7 +309,7 @@ namespace Coophead.Plugin
             GUILayout.Space(8f);
             GUILayout.Label("Agradecimiento", title);
             Toggle(CoopheadSettings.ThanksSection, "ExigirAgradecimiento", "Exigir el «gracias» tras cada rescate");
-            Slider(CoopheadSettings.ThanksSection, "VentanaSegundos", "Segundos para dar las gracias", 1f, 8f, "0.0");
+            Slider(CoopheadSettings.ThanksSection, "VentanaSegundos", "Segundos para dar las gracias (desde el parry)", 1f, 8f, "0.0");
             Toggle(CoopheadSettings.ThanksSection, "RespaldoManual", "Permitir dar las gracias con tecla (F7 / F8)");
             Toggle(CoopheadSettings.ThanksSection, "ExigirApelativo", "Exigir apelativo («gracias, cari»)");
 

@@ -38,6 +38,9 @@ namespace Coophead.Core
         private readonly RouletteService roulette;
         private readonly PenaltyScheduler penalties;
 
+        /// <summary>Castigos por gracias olvidadas que esperan a que el rescatado termine de reaparecer.</summary>
+        private readonly List<DeferredPunishment> deferred = new List<DeferredPunishment>();
+
         public CoopheadSession(CoopheadConfig config, IPenaltyApplier applier, ICoreLog log = null, IRandomSource random = null)
         {
             this.config = config;
@@ -125,6 +128,7 @@ namespace Coophead.Core
             penalties.ClearPlayer(player);
             var resolved = new List<ThanksWindow>();
             thanks.CloseFor(player, "Ha vuelto a morir.", resolved);
+            deferred.RemoveAll(d => d.Window.Rescued == player);
             RaiseClosed(resolved);
             return result;
         }
@@ -169,13 +173,14 @@ namespace Coophead.Core
         }
 
         /// <summary>
-        /// El juego confirma que el jugador ha vuelto a la partida: empieza el plazo de su ventana de agradecimiento y, si
-        /// volvió sin rescate (robo de corazón), se marca como vivo sin contar nada.
+        /// El juego confirma que el jugador ha vuelto a la partida: si tenía un castigo pendiente por no dar las gracias,
+        /// se aplica ahora; si volvió sin rescate (robo de corazón), se marca como vivo sin contar nada.
         /// </summary>
         public void OnPlayerBackInGame(PlayerSlot player, string eventKey, float now)
         {
-            thanks.ConfirmRevive(player, now);
+            thanks.ConfirmRevive(player);
             rules.OnPlayerRevivedWithoutRescue(player, eventKey);
+            ApplyDeferredPunishments(player, now);
         }
 
         /// <summary>Vuelta a la partida sin rescate (robo de corazón u otra vía): no cuenta ni abre ventana.</summary>
@@ -257,10 +262,36 @@ namespace Coophead.Core
             thanks.ReportTechnicalFailure();
         }
 
+        /// <summary>Jugadores con un castigo pendiente que llegará cuando terminen de reaparecer.</summary>
+        public IList<PlayerSlot> PunishmentsWaitingForRevive
+        {
+            get
+            {
+                var players = new List<PlayerSlot>();
+                foreach (DeferredPunishment item in deferred)
+                {
+                    players.Add(item.Window.Rescued);
+                }
+
+                return players;
+            }
+        }
+
         /// <summary>Avanza el tiempo: restaura efectos expirados y resuelve ventanas vencidas.</summary>
         public void Tick(float now)
         {
             penalties.Tick(now);
+
+            // Si el juego nunca confirma la reaparición, el castigo pendiente se aplica igualmente tras la espera máxima.
+            for (int i = deferred.Count - 1; i >= 0; i--)
+            {
+                if (now >= deferred[i].Deadline)
+                {
+                    ThanksWindow late = deferred[i].Window;
+                    deferred.RemoveAt(i);
+                    SpinFor(late, now);
+                }
+            }
 
             var resolved = new List<ThanksWindow>();
             thanks.Tick(now, resolved);
@@ -283,7 +314,45 @@ namespace Coophead.Core
             }
 
             session.Get(window.Rescued).ThanksMissed++;
-            PlayerSlot target = config.PenaltyTarget == PenaltyTargetMode.Rescued ? window.Rescued : window.Rescuer;
+            PlayerSlot target = TargetOf(window);
+            if (window.AwaitingRevive && target == window.Rescued)
+            {
+                // El plazo (desde el parry) ha pasado, pero aún está reapareciendo: el castigo llega cuando vuelva.
+                deferred.Add(new DeferredPunishment(window, now + ThanksWindowTracker.MaxReviveWaitSeconds));
+                log.Info("Sin gracias de " + window.Rescued.Label() + ": el castigo llegará cuando reaparezca.");
+                return;
+            }
+
+            SpinFor(window, now);
+        }
+
+        private PlayerSlot TargetOf(ThanksWindow window)
+        {
+            return config.PenaltyTarget == PenaltyTargetMode.Rescued ? window.Rescued : window.Rescuer;
+        }
+
+        private void ApplyDeferredPunishments(PlayerSlot player, float now)
+        {
+            for (int i = deferred.Count - 1; i >= 0; i--)
+            {
+                if (deferred[i].Window.Rescued == player)
+                {
+                    ThanksWindow window = deferred[i].Window;
+                    deferred.RemoveAt(i);
+                    SpinFor(window, now);
+                }
+            }
+        }
+
+        private void SpinFor(ThanksWindow window, float now)
+        {
+            LevelSessionState session = rules.Session;
+            if (session == null || !session.IsActive || session.RestartPending)
+            {
+                return;
+            }
+
+            PlayerSlot target = TargetOf(window);
             PlayerRoundStats targetStats = session.Get(target);
             if (!targetStats.IsAlive)
             {
@@ -334,6 +403,7 @@ namespace Coophead.Core
 
         private void ResetTransientState(string note)
         {
+            deferred.Clear();
             penalties.ClearAll();
             var resolved = new List<ThanksWindow>();
             thanks.CloseAll(note, resolved);
@@ -346,6 +416,19 @@ namespace Coophead.Core
             {
                 Raise(ThanksWindowClosed, window);
             }
+        }
+
+        private sealed class DeferredPunishment
+        {
+            public DeferredPunishment(ThanksWindow window, float deadline)
+            {
+                Window = window;
+                Deadline = deadline;
+            }
+
+            public ThanksWindow Window { get; private set; }
+
+            public float Deadline { get; private set; }
         }
 
         /// <summary>Un fallo en un suscriptor (HUD, integración) no debe romper el estado del Core.</summary>

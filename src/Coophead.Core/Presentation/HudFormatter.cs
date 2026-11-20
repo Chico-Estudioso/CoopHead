@@ -62,7 +62,12 @@ namespace Coophead.Core.Presentation
 
             foreach (ThanksWindow window in session.Thanks.Pending)
             {
-                lines.Add(window.Rescued.Label() + ": ¡da las gracias! " + (window.AwaitingRevive ? "(reapareciendo…)" : Seconds(window.Remaining(now))));
+                lines.Add(window.Rescued.Label() + ": ¡da las gracias! " + Seconds(window.Remaining(now)));
+            }
+
+            foreach (PlayerSlot waiting in session.PunishmentsWaitingForRevive)
+            {
+                lines.Add(waiting.Label() + ": sin gracias · castigo al reaparecer");
             }
 
             foreach (ActivePenalty penalty in session.Penalties.Active)

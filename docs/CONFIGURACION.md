@@ -112,7 +112,7 @@ Agradecimiento: voz no disponible · tecla activa
 | `ConfianzaMinima` | `0.6` | 0,1–1. Súbela si hay falsos positivos; bájala si no te reconoce. |
 | `FuenteVoz` | `Ambos` | `Microfono`, `Escritorio` (lo que suena en el PC, p. ej. Parsec) o `Ambos`. Requiere reiniciar el juego. |
 | `ConfianzaMinimaEscritorio` | `0.6` | 0,1–1. Para lo oído por el escritorio, donde también suena el juego. |
-| `RetrasoEscritorio` | `0.8` s | 0–2. Tiempo inicial de la ventana en que se ignora el escritorio (sonido de reanimación del juego). |
+| `RetrasoEscritorio` | `0.3` s | 0–2. Tiempo inicial de la ventana en que se ignora el escritorio (sonido de reanimación del juego). Pequeño para que un «gracias» dicho justo al hacer el parry cuente. |
 | `TeclaPruebaVoz` | `F9` | Escucha 5 s y escribe en el log lo reconocido y por qué fuente. |
 
 Privacidad y limitaciones en `docs/VOZ_Y_PRIVACIDAD.md`.

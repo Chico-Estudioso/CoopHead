@@ -5,8 +5,8 @@ Los cambios se documentan en español y se agrupan por versión.
 ## Sin publicar
 ### Corregido (20/11/2026, tras la primera partida real)
 - La voz del escritorio fallaba siempre («El método especificado no es compatible»): el flujo de audio ya no rechaza `Seek`.
-- La ventana de agradecimiento caducaba y castigaba antes de que el rescatado reapareciera: el plazo empieza ahora cuando el juego confirma la reaparición (se puede dar las gracias desde el parry).
-- El HUD y la ventana muestran «(reapareciendo…)» mientras tanto.
+- El castigo por no dar las gracias caía mientras el rescatado aún reaparecía. El plazo sigue contando desde el parry de reanimación, pero el castigo se aplica cuando el jugador vuelve a la partida. El HUD muestra «sin gracias · castigo al reaparecer».
+- `RetrasoEscritorio` baja a 0,3 s por defecto para que un «gracias» dicho justo al hacer el parry cuente.
 
 ### Verificado (20/11/2026)
 - Partida real en Flower: muertes, rescates, golpes, parrys, súper, daño, límite individual con reinicio y castigos reales funcionan (`docs/pruebas/2026-11-20-partida-flower.md`).
