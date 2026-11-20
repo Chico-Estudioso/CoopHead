@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Speech.AudioFormat;
 using System.Threading;
@@ -22,6 +23,7 @@ namespace Coophead.Voice
         private const int SilenceAfterMilliseconds = 120;
 
         private readonly int ignoreInitialMilliseconds;
+        private readonly string deviceId;
         private WasapiLoopbackCapture capture;
         private BufferedWaveProvider buffer;
         private IWaveProvider pcm16;
@@ -33,9 +35,68 @@ namespace Coophead.Voice
         /// Silencio inicial: al abrirse la ventana suena el efecto de reanimación del juego, que no debe confundirse
         /// con un agradecimiento.
         /// </param>
-        public LoopbackSource(int ignoreInitialMilliseconds)
+        /// <param name="deviceId">Salida de audio que se captura (id de Windows); null = la predeterminada.</param>
+        public LoopbackSource(string deviceId, int ignoreInitialMilliseconds)
         {
+            this.deviceId = deviceId;
             this.ignoreInitialMilliseconds = Math.Max(0, ignoreInitialMilliseconds);
+        }
+
+        /// <summary>
+        /// Salidas de audio que se van a escuchar según la elección del usuario:
+        /// «todos» (todas las activas: Discord puede sacar el sonido por otra salida distinta de la predeterminada),
+        /// «predeterminado» (multimedia y comunicaciones) o una parte del nombre del dispositivo.
+        /// </summary>
+        public static IList<KeyValuePair<string, string>> SelectDevices(string choice)
+        {
+            var result = new List<KeyValuePair<string, string>>();
+            string wanted = (choice ?? string.Empty).Trim();
+            using (var enumerator = new MMDeviceEnumerator())
+            {
+                if (wanted.Length == 0 || string.Equals(wanted, "predeterminado", StringComparison.OrdinalIgnoreCase))
+                {
+                    AddDefault(enumerator, Role.Multimedia, result);
+                    AddDefault(enumerator, Role.Communications, result);
+                    return result;
+                }
+
+                bool all = string.Equals(wanted, "todos", StringComparison.OrdinalIgnoreCase);
+                foreach (MMDevice device in enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active))
+                {
+                    if (all || device.FriendlyName.IndexOf(wanted, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        result.Add(new KeyValuePair<string, string>(device.ID, device.FriendlyName));
+                    }
+                }
+
+                if (result.Count == 0)
+                {
+                    AddDefault(enumerator, Role.Multimedia, result);
+                }
+            }
+
+            return result;
+        }
+
+        private static void AddDefault(MMDeviceEnumerator enumerator, Role role, List<KeyValuePair<string, string>> result)
+        {
+            try
+            {
+                MMDevice device = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, role);
+                foreach (KeyValuePair<string, string> existing in result)
+                {
+                    if (existing.Key == device.ID)
+                    {
+                        return;
+                    }
+                }
+
+                result.Add(new KeyValuePair<string, string>(device.ID, device.FriendlyName));
+            }
+            catch (Exception)
+            {
+                // No hay dispositivo para ese papel.
+            }
         }
 
         public static SpeechAudioFormatInfo Format
@@ -43,20 +104,22 @@ namespace Coophead.Voice
             get { return new SpeechAudioFormatInfo(16000, AudioBitsPerSample.Sixteen, AudioChannel.Mono); }
         }
 
-        /// <summary>Descripción del dispositivo que se captura, para el log.</summary>
-        public static string DescribeDevice()
-        {
-            using (var enumerator = new MMDeviceEnumerator())
-            using (MMDevice device = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia))
-            {
-                return device.FriendlyName;
-            }
-        }
 
         public AudioPipeStream Start()
         {
             Stop();
-            capture = new WasapiLoopbackCapture();
+            if (deviceId == null)
+            {
+                capture = new WasapiLoopbackCapture();
+            }
+            else
+            {
+                using (var enumerator = new MMDeviceEnumerator())
+                {
+                    capture = new WasapiLoopbackCapture(enumerator.GetDevice(deviceId));
+                }
+            }
+
             WaveFormat format = Standardize(capture.WaveFormat);
             buffer = new BufferedWaveProvider(format)
             {

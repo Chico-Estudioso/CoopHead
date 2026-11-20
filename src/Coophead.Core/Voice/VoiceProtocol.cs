@@ -147,9 +147,33 @@ namespace Coophead.Core.Voice
             return RejectedSpeech + " " + SingleLine(source);
         }
 
+        /// <summary>«mic», «escritorio» o «escritorio» seguido de un número (una salida de audio concreta).</summary>
         public static bool IsKnownSource(string source)
         {
-            return source == SourceMicrophone || source == SourceDesktop;
+            if (string.IsNullOrEmpty(source))
+            {
+                return false;
+            }
+
+            if (source == SourceMicrophone || source == SourceDesktop)
+            {
+                return true;
+            }
+
+            if (!source.StartsWith(SourceDesktop, StringComparison.Ordinal) || source.Length == SourceDesktop.Length)
+            {
+                return false;
+            }
+
+            for (int i = SourceDesktop.Length; i < source.Length; i++)
+            {
+                if (source[i] < '0' || source[i] > '9')
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public static VoiceMessage Parse(string line)

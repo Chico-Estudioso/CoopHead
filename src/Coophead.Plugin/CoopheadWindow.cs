@@ -323,6 +323,7 @@ namespace Coophead.Plugin
             Slider("7 - Voz", "ConfianzaMinima", "Confianza mínima del micrófono", 0.1f, 1f, "0.00");
             Slider("7 - Voz", "ConfianzaMinimaEscritorio", "Confianza mínima del escritorio", 0.1f, 1f, "0.00");
             Slider("7 - Voz", "RetrasoEscritorio", "Escritorio ignorado al hacer el parry (s, requiere reiniciar)", 0f, 2f, "0.0");
+            TextSetting("7 - Voz", "DispositivoEscritorio", "Salidas del escritorio («todos», «predeterminado» o nombre; requiere reiniciar)");
             Slider(CoopheadSettings.ThanksSection, "MargenVoz", "Margen para que la voz termine de procesar (s)", 0f, 5f, "0.0");
             if (GUILayout.Button("Probar la voz 5 s (también F9)", GUILayout.Width(300f)) && RequestVoiceTest != null)
             {
@@ -491,6 +492,25 @@ namespace Coophead.Plugin
             }
 
             GUILayout.EndHorizontal();
+        }
+
+        private void TextSetting(string section, string key, string label)
+        {
+            ConfigEntryBase entry = Entry(section, key);
+            if (entry == null || !(entry.BoxedValue is string))
+            {
+                return;
+            }
+
+            string value = (string)entry.BoxedValue;
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, rich, GUILayout.Width(380f));
+            string changed = GUILayout.TextField(value, 80, GUILayout.Width(200f));
+            GUILayout.EndHorizontal();
+            if (changed != value)
+            {
+                entry.BoxedValue = changed;
+            }
         }
 
         private void EnumCycle(string section, string key, string label)

@@ -36,6 +36,9 @@ namespace Coophead.Plugin
             public float DesktopMinConfidence { get; set; }
 
             public float DesktopDelaySeconds { get; set; }
+
+            /// <summary>«todos», «predeterminado» o parte del nombre de una salida de audio.</summary>
+            public string DesktopDevices { get; set; }
         }
 
         private const string ExitedMarker = "\u0000EXITED";
@@ -77,7 +80,8 @@ namespace Coophead.Plugin
                     + "\" --sources " + DescribeSources(options.Sources)
                     + " --min-confidence " + options.MinConfidence.ToString("0.00", CultureInfo.InvariantCulture)
                     + " --desktop-min-confidence " + options.DesktopMinConfidence.ToString("0.00", CultureInfo.InvariantCulture)
-                    + " --desktop-delay-ms " + ((int)(options.DesktopDelaySeconds * 1000f)).ToString(CultureInfo.InvariantCulture),
+                    + " --desktop-delay-ms " + ((int)(options.DesktopDelaySeconds * 1000f)).ToString(CultureInfo.InvariantCulture)
+                    + " --desktop-devices \"" + SanitizeDeviceChoice(options.DesktopDevices) + "\"",
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
@@ -205,6 +209,21 @@ namespace Coophead.Plugin
                 default:
                     return VoiceProtocol.SourceMicrophone;
             }
+        }
+
+        /// <summary>Nombre de dispositivo sin comillas ni caracteres de control, para la línea de órdenes.</summary>
+        private static string SanitizeDeviceChoice(string choice)
+        {
+            var builder = new StringBuilder();
+            foreach (char c in (choice ?? string.Empty).Trim())
+            {
+                if (c != '"' && c != '\\' && !char.IsControl(c))
+                {
+                    builder.Append(c);
+                }
+            }
+
+            return builder.Length == 0 ? "todos" : builder.ToString();
         }
 
         /// <summary>Solo letras y guiones («es-ES»); cualquier otra cosa vuelve al valor por defecto.</summary>

@@ -45,6 +45,7 @@ namespace Coophead.Voice
             float minConfidence = 0.6f;
             float desktopMinConfidence = 0.6f;
             int desktopDelayMs = 300;
+            string desktopDevices = "todos";
             for (int i = 0; i + 1 < args.Length; i += 2)
             {
                 string value = args[i + 1];
@@ -64,6 +65,9 @@ namespace Coophead.Voice
                         break;
                     case "--desktop-min-confidence":
                         float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out desktopMinConfidence);
+                        break;
+                    case "--desktop-devices":
+                        desktopDevices = value;
                         break;
                     case "--desktop-delay-ms":
                         int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out desktopDelayMs);
@@ -100,21 +104,23 @@ namespace Coophead.Voice
 
                 if (wantDesktop)
                 {
-                    string device;
+                    IList<KeyValuePair<string, string>> devices;
                     try
                     {
-                        device = "escritorio (" + LoopbackSource.DescribeDevice() + ")";
+                        devices = LoopbackSource.SelectDevices(desktopDevices);
                     }
                     catch (Exception e)
                     {
-                        device = null;
+                        devices = new List<KeyValuePair<string, string>>();
                         problems.Add("No se puede capturar el audio del escritorio: " + e.Message);
                     }
 
-                    if (device != null)
+                    for (int i = 0; i < devices.Count; i++)
                     {
-                        TryAddChannel(VoiceProtocol.SourceDesktop, recognizer, phrases, desktopMinConfidence,
-                            new LoopbackSource(desktopDelayMs), problems, active, device);
+                        // Con varias salidas, cada una tiene su nombre («escritorio1», «escritorio2»…) para saber por cuál se oye.
+                        string source = devices.Count == 1 ? VoiceProtocol.SourceDesktop : VoiceProtocol.SourceDesktop + (i + 1);
+                        TryAddChannel(source, recognizer, phrases, desktopMinConfidence,
+                            new LoopbackSource(devices[i].Key, desktopDelayMs), problems, active, source + " = " + devices[i].Value);
                     }
                 }
 

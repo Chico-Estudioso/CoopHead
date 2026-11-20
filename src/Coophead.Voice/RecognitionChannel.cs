@@ -22,6 +22,17 @@ namespace Coophead.Voice
             this.loopback = loopback;
             engine = new SpeechRecognitionEngine(recognizer);
             engine.LoadGrammar(grammar);
+            try
+            {
+                // Windows descarta por su cuenta las frases que no llegan a su umbral interno (SpeechRecognitionRejected)
+                // antes de que podamos aplicar ConfianzaMinima. Se baja para que decida la configuración del usuario.
+                engine.UpdateRecognizerSetting("CFGConfidenceRejectionThreshold", 10);
+            }
+            catch (Exception)
+            {
+                // Si el reconocedor no admite el ajuste, se queda con el suyo.
+            }
+
             if (loopback == null)
             {
                 // Lanza InvalidOperationException si Windows no tiene micrófono predeterminado.
